@@ -144,10 +144,23 @@
         window.LOGGED_IN_USER = "";
 
         // SỬA CHUẨN XÁC CHỐNG LIỆT NÚT: Gài tên toggleGateView thẳng vào đối tượng window toàn cục [🗎1]
+    </script>
+            <!-- 1. THẺ SCRIPT THƯỜNG: Đặt ở ngoài phạm vi module để trình duyệt nạp toàn cục lập tức -->
+    <script>
         window.toggleGateView = function(showRegister) {
-            document.getElementById("loginFormBox").style.display = showRegister ? "none" : "block";
-            document.getElementById("registerFormBox").style.display = showRegister ? "block" : "none";
+            const loginBox = document.getElementById("loginFormBox");
+            const registerBox = document.getElementById("registerFormBox");
+            
+            if (showRegister) {
+                loginBox.style.display = "none";
+                registerBox.style.display = "block";
+            } else {
+                loginBox.style.display = "block";
+                registerBox.style.display = "none";
+            }
         };
+    </script>
+
 
         // Thuật toán chuyển đổi Tab động Single Page (SPA) cách ly dữ liệu giữa các phân khu [🗎1]
         window.switchHubTab = function(frameId) {
