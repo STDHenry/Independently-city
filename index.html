@@ -136,12 +136,12 @@
         <!-- =========================================================
          BỘ NÃO JAVASCRIPT ĐIỀU KHIỂN LUỒNG HỆ THỐNG - PHẦN 3
          ========================================================= -->
+        <!-- ĐÃ VÁ: Chèn thẻ mở này vào ngay trước đoạn code JavaScript của bạn -->
     <script type="module">
-        // Nhập các hàm kết nối đám mây và báo thông báo từ file tiện ích dùng chung
         import { clientDB, showNotificationPopup, setGlobalSession } from './utils.js';
-
-        // Biến toàn cục lưu giữ trạng thái session tạm thời trong file chủ
+        
         window.LOGGED_IN_USER = "";
+
 
         // SỬA CHUẨN XÁC CHỐNG LIỆT NÚT: Gài tên toggleGateView thẳng vào đối tượng window toàn cục [🗎1]
     </script>
@@ -159,11 +159,7 @@
                 registerBox.style.display = "none";
             }
         };
-    </script>
-
-
-        // Thuật toán chuyển đổi Tab động Single Page (SPA) cách ly dữ liệu giữa các phân khu [🗎1]
-        window.switchHubTab = function(frameId) {
+        window.switchHubTab = function(frameId, evt) {
             // LÁ CHẮN BẢO VỆ: Nếu chưa vượt qua gateway đăng nhập, khóa cứng navbar [🗎1]
             if (!window.LOGGED_IN_USER) return; 
 
@@ -172,7 +168,8 @@
             document.querySelectorAll('.content-frame').forEach(frame => frame.classList.remove('active'));
 
             // Bật sáng tab mới trúng mục tiêu được click
-            event.currentTarget.classList.add('active');
+            const activeTab = evt?.currentTarget || document.querySelector('.nav-item.active');
+            if (activeTab) activeTab.classList.add('active');
             const targetFrame = document.getElementById(frameId);
             targetFrame.classList.add('active');
 
@@ -283,20 +280,14 @@
                     return;
                 }
 
-                // Đăng nhập thành công -> Trích xuất ngược tên Username độc nhất từ metadata ra [🗎1]
-                window.LOGGED_IN_USER = loginData.user.user_metadata.display_name;
-                
-                // Đồng bộ danh tính vào bộ nhớ tạm toàn cục trong utils.js để các Iframe con bốc dữ liệu [🗎1]
+                                window.LOGGED_IN_USER = loginData.user.user_metadata.display_name;
                 setGlobalSession(window.LOGGED_IN_USER, email);
 
-                // Mở khóa ẩn cổng Gateway biến mất dữ liệu
                 document.getElementById("gateOverlay").style.display = "none";
                 showNotificationPopup("XÁC THỰC", `Chào mừng cư dân [${window.LOGGED_IN_USER}] đã kích hoạt email và đăng nhập mạng thành công!`);
-                
-                // Kích hoạt nạp file thực tế mặc định cho trang Hub Chủ đầu tiên
                 document.getElementById('page-hub').src = 'hub.html';
             }
         };
-    </script>
+    </script> <!-- ĐÃ VÁ: Chèn thẻ đóng script này vào đây -->
 </body>
 </html>
