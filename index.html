@@ -145,10 +145,12 @@
         window.LOGGED_IN_USER = "";
 
         // Hàm xử lý lật mặt biểu mẫu Đăng ký / Đăng nhập ở Gateway
-        window.toggleFormView = function(showRegister) {
+                // SỬA TẠI ĐÂY: Đổi toggleFormView thành toggleGateView để ăn khớp với nút bấm HTML
+        window.toggleGateView = function(showRegister) {
             document.getElementById("loginFormBox").style.display = showRegister ? "none" : "block";
             document.getElementById("registerFormBox").style.display = showRegister ? "block" : "none";
         };
+
 
         // Thuật toán chuyển đổi Tab động Single Page (SPA) cách ly dữ liệu
         window.switchHubTab = function(frameId) {
