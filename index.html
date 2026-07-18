@@ -60,17 +60,22 @@
 
     <div class="main-wrapper">
         <!-- CỔNG CHẶN HOÀN TOÀN HỆ THỐNG NẾU CHƯA ĐẠT ĐIỀU KIỆN CHẤP THUẬN -->
-        <div id="gateOverlay" class="gate-overlay">
-            <!-- Cột trái: Văn bản ký kết chấp thuận hợp đồng điều khoản cư dân -->
-            <div class="gate-panel" style="border-right: 1px solid #000000; padding-right: 40px;">
-                <h3 style="margin-top:0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">📜 HỢP ĐỒNG KÝ CHẤP THUẬN CƯ DÂN INDEPENDENT CITY</h3>
-                <div class="terms-box">
-                    Welcome cư dân đến với <b>Trung tâm xử lý dịch vụ mạng Independent City</b>.<br><br>
-                    1. <b>Quy định tài chính phi doanh nghiệp:</b> Khi khởi tạo tài khoản thành công, bạn sẽ được cấp hạn mức vốn cố định là 1.000.000 AD trong ví Ngân hàng. Số tiền này dùng để giao dịch nội bộ trong phân khu Chợ tự doanh và chuyển khoản giữa các cư dân.<br><br>
-                    2. <b>Quyền bảo mật danh tính:</b> Hệ thống cung cấp Chế độ ẩn danh (Hidden Profile) trong mục Cài đặt. Khi kích hoạt, toàn bộ thông tin cá nhân của bạn sẽ được ẩn giấu, người khác sẽ không thể tra cứu hay xem trang cá nhân của bạn.<br><br>
-                    3. <b>Yêu cầu xác thực hòm thư:</b> Nhằm tránh tình trạng bot spam tài khoản rác phá hoại hệ thống, Independent City áp dụng quy chuẩn xác minh email bắt buộc. Hệ thống sẽ gửi một liên kết xác nhận về hòm thư điện tử của bạn ngay sau khi hoàn tất thủ tục đăng ký.<br><br>
-                    4. Bằng việc tích chọn vào ô xác nhận dưới đây, bạn chính thức số hóa chữ ký của mình, chấp thuận toàn bộ điều khoản để mở khóa quyền sử dụng dịch vụ mạng Independent City.
+                    <!-- Form Đăng nhập hệ thống bằng cơ chế Mã số OTP của bạn -->
+            <div class="gate-panel" id="loginFormBox">
+                <h2 style="margin-top:0; text-transform: uppercase; font-weight: 800; color: #001F3F;">Đăng Nhập Cư Dân</h2>
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Địa chỉ Email:</label>
+                    <input type="email" id="loginEmail" class="city-input" placeholder="nhap-email-cua-ban@gmail.com">
                 </div>
+                <!-- ĐÃ ĐỔI: Chuyển sang ô nhập mã số OTP 6 chữ số từ hòm thư -->
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Mã số xác thực OTP (Lấy từ Gmail):</label>
+                    <input type="text" id="loginOTP" class="city-input" placeholder="Nhập mã OTP 6 số..." maxlength="6" autocomplete="off">
+                </div>
+                <button class="city-btn" onclick="handleGatewayAuth('login')">Xác minh OTP vào Thành Phố 🏠</button>
+                <p style="font-size:12px; margin-top:20px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView(true)">Chưa có tài khoản? Bấm vào đây để đăng ký tài khoản mới</p>
+            </div>
+
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
                     <input type="checkbox" id="agreeCheckbox" style="width:18px; height:18px; cursor:pointer;">
                     <label for="agreeCheckbox" style="font-weight:bold; cursor:pointer; font-size: 14px;">Tôi xác nhận đồng ý và ký chấp thuận điều khoản trên ✍️</label>
@@ -261,32 +266,40 @@
 
             } else if (type === 'login') {
                 const email = document.getElementById("loginEmail").value.trim();
-                const password = document.getElementById("loginPwd").value.trim();
+                const otpCode = document.getElementById("loginOTP").value.trim(); // Bốc mã OTP người dùng vừa nhập
 
-                if (email === "" || password === "") {
-                    alert("Vui lòng nhập đầy đủ Email và Mật khẩu!");
+                if (email === "" || otpCode === "") {
+                    alert("Vui lòng nhập đầy đủ Email và Mã xác thực OTP lấy từ Gmail!");
                     return;
                 }
 
-                // Tiến hành gọi lệnh đăng nhập thông qua hệ thống Auth của Supabase [🗎1]
-                const { data: loginData, error: loginErr } = await clientDB.auth.signInWithPassword({
+                // TIẾN HÀNH GỌI CỔNG SUPABASE AUTH XÁC THỰC MÃ SỐ OTP 6 CHỮ SỐ TRỰC TUYẾN [🗎1]
+                const { data: loginData, error: loginErr } = await clientDB.auth.verifyOtp({
                     email: email,
-                    password: password
+                    token: otpCode,
+                    type: 'signup' // Hoặc chuyển thành 'magiclink'/'email' tùy theo cấu hình loại OTP bạn bật trên Supabase
                 });
 
                 if (loginErr) {
-                    // Nếu tài khoản chưa bấm link kích hoạt gửi về mail, Supabase tự động chặn và báo lỗi ở đây [🗎1]
-                    alert("⚠️ Đăng nhập thất bại: " + loginErr.message + " (Hãy đảm bảo bạn đã nhấn vào liên kết xác thực gửi về hòm thư điện tử).");
+                    // Nếu gõ sai mã số hoặc mã OTP đã quá hạn, hệ thống chặn đứng ném lỗi ra màn hình [🗎1]
+                    alert("⚠️ Xác thực OTP thất bại: " + loginErr.message + " (Vui lòng kiểm tra lại hòm thư điện tử của bạn).");
                     return;
                 }
 
-                                window.LOGGED_IN_USER = loginData.user.user_metadata.display_name;
+                // Xác thực thành công -> Tự động truy vết bốc ngược tên Username từ metadata tài khoản ra [🗎1]
+                window.LOGGED_IN_USER = loginData.user?.user_metadata?.display_name || "Cư_Dân_Vip";
+                
+                // Đồng bộ danh tính vào bộ nhớ tạm toàn cục trong utils.js để các Iframe con bốc dữ liệu [🗎1]
                 setGlobalSession(window.LOGGED_IN_USER, email);
 
+                // Mở khóa ẩn cổng Gateway biến mất dữ liệu, chính thức lọt vào thành phố
                 document.getElementById("gateOverlay").style.display = "none";
-                showNotificationPopup("XÁC THỰC", `Chào mừng cư dân [${window.LOGGED_IN_USER}] đã kích hoạt email và đăng nhập mạng thành công!`);
+                showNotificationPopup("XÁC THỰC", `Chào mừng cư dân [${window.LOGGED_IN_USER}] đã nhập đúng mã OTP và đăng nhập thành công!`);
+                
+                // Kích hoạt nạp file thực tế mặc định cho trang Hub Chủ đầu tiên
                 document.getElementById('page-hub').src = 'hub.html';
             }
+
         };
     </script> <!-- ĐÃ VÁ: Chèn thẻ đóng script này vào đây -->
 </body>
