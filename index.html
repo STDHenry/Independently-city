@@ -63,15 +63,29 @@
         <!-- CỔNG GATEWAY CHẶN HOÀN TOÀN HỆ THỐNG NẾU CHƯA ĐẠT ĐIỀU KIỆN CHẤP THUẬN -->
         <div id="gateOverlay" class="gate-overlay">
             <!-- Cột bên trái: Văn bản Hợp đồng ký kết chấp thuận điều khoản cư dân -->
-            <div class="gate-panel" style="border-right: 1px solid #000000; padding-right: 40px;">
-                <h3 style="margin-top:0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">📜 HỢP ĐỒNG KÝ CHẤP THUẬN CƯ DÂN INDEPENDENT CITY</h3>
-                <div class="terms-box">
-                    Welcome cư dân đến với <b>Trung tâm xử lý dịch vụ mạng Independent City</b>.<br><br>
-                    1. <b>Quy định tài chính phi doanh nghiệp:</b> Khi khởi tạo tài khoản thành công, bạn sẽ được cấp hạn mức vốn cố định là 1.000.000 AD trong ví Ngân hàng. Số tiền này dùng để giao dịch nội bộ trong phân khu Chợ tự doanh và chuyển khoản giữa các cư dân.<br><br>
-                    2. <b>Quyền bảo mật danh tính:</b> Hệ thống cung cấp Chế độ ẩn danh (Hidden Profile) trong mục Cài đặt. Khi kích hoạt, toàn bộ thông tin cá nhân của bạn sẽ được ẩn giấu, người khác sẽ không thể tra cứu hay xem trang cá nhân của bạn.<br><br>
-                    3. <b>Yêu cầu xác thực hòm thư:</b> Nhằm tránh tình trạng bot spam tài khoản rác phá hoại hệ thống, Independent City áp dụng quy chuẩn xác minh email bắt buộc. Hệ thống sẽ gửi một liên kết xác nhận về hòm thư điện tử của bạn ngay sau khi hoàn tất thủ tục đăng ký.<br><br>
-                    4. Bằng việc tích chọn vào ô xác nhận dưới đây, bạn chính thức số hóa chữ ký của mình, chấp thuận toàn bộ điều khoản để mở khóa quyền sử dụng dịch vụ mạng Independent City.
+                        <!-- Form Đăng ký (Đã đồng bộ bộ lọc CSS Xanh hải quân - Đen - Trắng) -->
+            <div class="gate-panel" id="registerFormBox" style="display: none;">
+                <h2 style="margin-top:0; text-transform: uppercase; font-weight: 800; color: var(--navy-dark);">Khởi Tạo Danh Tính</h2>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản (Username độc nhất):</label>
+                    <input type="text" id="regUser" class="city-input" placeholder="Ví dụ: STDHenry" autocomplete="off">
                 </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Email nhận mã xác thực thực tế:</label>
+                    <input type="email" id="regEmail" class="city-input" placeholder="nhap-email-thuc-te@gmail.com" autocomplete="off">
+                </div>
+                
+                <div style="margin-bottom: 20px;">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Mật khẩu an toàn (Tối thiểu 6 ký tự):</label>
+                    <input type="password" id="regPwd" class="city-input" placeholder="Thiết lập mật khẩu...">
+                </div>
+                
+                <button class="city-btn" onclick="handleGatewayAuth('register')" style="width: 100%;">Gửi yêu cầu xác thực Mail ✉️</button>
+                <p style="font-size:12px; margin-top:20px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView(false)">Đã có tài khoản? Quay lại khung đăng nhập</p>
+            </div>
+
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
                     <input type="checkbox" id="agreeCheckbox" style="width:18px; height:18px; cursor:pointer;">
                     <label for="agreeCheckbox" style="font-weight:bold; cursor:pointer; font-size: 14px;">Tôi xác nhận đồng ý và ký chấp thuận điều khoản trên ✍️</label>
