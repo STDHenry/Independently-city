@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Independent City - Trung Tâm Tin Nhắn Mạng</title>
+    <!-- Nhúng file CSS quy chuẩn dùng chung toàn thành phố của bạn -->
+    <link rel="stylesheet" href="main.css">
+    <style>
+        /* CSS biệt lập tối ưu riêng cho không gian hiển thị bên trong Iframe Tin Nhắn */
+        body {
+            padding: 25px;
+            box-sizing: border-box;
+            background-color: var(--white-pure);
+            color: var(--black-pure);
+        }
+        .chat-layout {
+            display: flex;
+            gap: 25px;
+            height: calc(100vh - 50px);
+        }
+        /* Phân khu trái: Form tìm kiếm tài khoản và gửi đơn báo cáo Admin */
+        .chat-sidebar {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+            border-right: 1px solid var(--black-pure);
+            padding-right: 25px;
+        }
+        body.dark-theme .chat-sidebar { border-right: 1px solid var(--white-pure); }
+
+        /* Phân khu phải: Hộp chứa nội dung trò chuyện tổng thời gian thực */
+        .chat-main {
+            flex: 2;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+        /* Vùng hiển thị cuộn bong bóng cuộc trò chuyện */
+        .chat-messages-box {
+            flex: 1;
+            border: 1px solid var(--black-pure);
+            background-color: var(--gray-light);
+            padding: 15px;
+            overflow-y: auto;
+            max-height: 420px;
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        body.dark-theme .chat-messages-box {
+            border: 1px solid var(--white-pure);
+            background-color: #1a1a1a;
+        }
+        
+        /* Cấu trúc định dạng bong bóng tin nhắn trái/phải */
+        .msg-row { display: flex; flex-direction: column; max-width: 75%; }
+        .msg-me { align-self: flex-end; }
+        .msg-other { align-self: flex-start; }
+        
+        .msg-bubble {
+            padding: 10px 14px; font-size: 14px; line-height: 1.4; word-break: break-word;
+            border: 1px solid var(--black-pure); box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+        body.dark-theme .msg-bubble { border: 1px solid var(--white-pure); }
+        .bubble-me { background-color: #E2F4FF; color: #000000; }
+        .bubble-other { background-color: var(--white-pure); color: #000000; }
+        body.dark-theme .bubble-other { background-color: #000000; color: var(--white-pure); }
+    </style>
+</head>
+<body>
+
+    <div class="chat-layout">
+        <!-- PHÂN KHU TRÁI: ĐỂ TRỐNG (NƠI ĐẶT BỘ CỔNG BÁO CÁO ADMIN SẼ XỬ LÝ Ở ĐỢT 22) -->
+        <div class="chat-sidebar" id="chatSidebarPanel">
+            <div style="font-size: 14px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.5px; border-bottom: 1px solid var(--black-pure); padding-bottom: 5px;">🛠️ Điều Khiển Kênh</div>
+        </div>
+
+        <!-- =========================================================
+             PHÂN KHU PHẢI: KHUNG CHÁT TỔNG VÀ THANH NHẬP LIỆU GÕ CHỮ
+             ========================================================= -->
+        <div class="chat-main">
+            <div class="city-title" style="margin-bottom: 5px;">✉️ Phòng Chat Tổng Independent City</div>
+            
+            <!-- Vùng hiển thị nội dung tin nhắn sẽ render động bằng JavaScript -->
+            <div class="chat-messages-box" id="cityLiveChatArea">
+                <p style="color: #718096; font-size: 13px; font-style: italic; text-align: center; margin-top: 180px;">Hệ thống đang mở cổng WebSockets kết nối phòng chat tổng đám mây...</p>
+            </div>
+
+            <!-- Thanh công cụ nhập liệu và nút bấm gửi tin nhắn ở đáy -->
+            <form id="cityChatSubmitForm" style="display: flex; gap: 10px;" onsubmit="sendGeneralMessage(event)">
+                <input type="text" id="cityChatInput" class="city-input" placeholder="Nhập tin nhắn gửi tới sảnh chat tổng của thành phố..." required autocomplete="off">
+                <button type="submit" class="city-btn">Gửi</button>
+            </form>
+        </div>
+    </div>
+
+    <!-- Khối kiểm tra cưỡng bức chế độ tối nếu file chủ đang bật -->
+    <script>
+        if (window.parent.document.body.classList.contains('dark-theme')) {
+            document.body.classList.add('dark-theme');
+        }
+    </script>
+                <!-- =========================================================
+                 PHÂN KHU TRÁI DƯỚI: KHỐI HỘP GỬI ĐƠN BÁO CÁO KHẨN CẤP LÊN ADMIN
+                 ========================================================= -->
+            <div class="city-card" style="margin-top: 15px; padding: 15px; border-style: dashed;">
+                <span class="city-badge" style="background-color: #E63946; margin-bottom: 10px;">🚨 Đường Dây Nóng Admin</span>
+                <p style="font-size: 12px; margin-top: 5px; margin-bottom: 12px; line-height: 1.4; color: #718096;">
+                    Phát hiện cư dân spam tài khoản rác, phá hoại luồng tiền tệ AD hoặc đăng bán dịch vụ sai quy chuẩn? Hãy gửi đơn báo cáo khẩn trực tiếp cho Admin <b>@STDHenry</b> tại đây.
+                </p>
+                
+                <form id="cityReportForm" onsubmit="sendEmergencyReport(event)">
+                    <div style="margin-bottom: 12px;">
+                        <textarea id="reportContentInput" class="city-input" style="height: 80px; font-family: inherit; resize: none; font-size: 12px;" placeholder="Gõ nội dung vi phạm, tên cư dân bị cáo buộc..." required></textarea>
+                    </div>
+                    <button type="submit" class="city-btn" style="width: 100%; font-size: 11px; padding: 8px; border-color: #E63946; color: #E63946;">⚡ Phát Hỏa Đơn Báo Cáo</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Tự động điều chỉnh màu đường viền nét đứt sang trắng nếu file chủ đang bật chế độ tối -->
+    <script>
+        if (window.parent.document.body.classList.contains('dark-theme')) {
+            const reportCard = document.querySelector('.chat-sidebar .city-card');
+            if (reportCard) reportCard.style.borderColor = 'var(--white-pure)';
+        }
+    </script>
+        <!-- =========================================================
+         BỘ NÃO JAVASCRIPT XỬ LÝ LOGIC TIN NHẮN - PHẦN 3
+         ========================================================= -->
+    <script type="module">
+        // Nhập trạm kết nối cơ sở dữ liệu và hàm báo popup từ file tiện ích toàn cục
+        import { clientDB, showNotificationPopup } from './utils.js';
+
+        let CURRENT_USER = "";
+
+        document.addEventListener("DOMContentLoaded", async () => {
+            // Tự động bốc danh tính cư dân từ file chủ truyền xuống
+            CURRENT_USER = window.parent.LOGGED_IN_USER;
+            
+            if (!CURRENT_USER) {
+                console.error("Lỗi: Không tìm thấy phiên làm việc hợp lệ của cư dân nhắn tin!");
+                return;
+            }
+
+            // Tải toàn bộ lịch sử phòng chat tổng vĩnh viễn từ đám mây ngay khi mở tab
+            await fetchChatMessagesCloud();
+
+            // ==========================================
+            // KÍCH HOẠT ĐƯỜNG TRUYỀN NGHE REALTIME CHATS LUÂN PHIÊN
+            // ==========================================
+            clientDB
+                .channel('city_chats_realtime_ref')
+                .on('postgres_changes', { event: 'INSERT', schema: 'public', table: 'city_chats' }, payload => {
+                    const newChat = payload.new;
+
+                    // TÌNH HUỐNG 1: Nếu là tin nhắn chat tổng công khai (is_report = false)
+                    if (!newChat.is_report) {
+                        appendMessageToChatUI(newChat);
+                        scrollToBottomChat();
+                    }
+                    
+                    // TÌNH HUỐNG 2: Nếu là ĐƠN BÁO CÁO KHẨN CẤP gửi tới đích danh Admin @STDHenry [🗎1]
+                    if (newChat.is_report && newChat.receiver === 'STDHenry') {
+                        // KÍCH HOẠT LÁ CHẮN ADMIN: Chỉ đẩy Popup giật lên màn hình riêng của tài khoản STDHenry! [🗎1]
+                        if (CURRENT_USER === 'STDHenry') {
+                            showNotificationPopup("🚨 BÁO CÁO KHẨN", `Cư dân @${newChat.sender} vừa bắn một đơn khiếu nại vi phạm lên hệ thống!`);
+                        }
+                    }
+                })
+                .subscribe();
+        });
+
+        // ==========================================
+        // THUẬT TOÁN TẢI LỊCH SỬ CHAT TỔNG TỪ CLOUD
+        // ==========================================
+        async function fetchChatMessagesCloud() {
+            const area = document.getElementById("cityLiveChatArea");
+            
+            try {
+                // Chỉ kéo các tin nhắn chat sảnh tổng (is_report = false), xếp theo thời gian
+                const { data: messages, error } = await clientDB
+                    .from('city_chats')
+                    .select('*')
+                    .eq('is_report', false)
+                    .order('created_at', { ascending: true })
+                    .limit(100); // Giới hạn tải trước 100 tin gần nhất
+
+                if (!error && messages) {
+                    area.innerHTML = ""; // Dọn sạch dòng chữ đang tải
+                    messages.forEach(msg => appendMessageToChatUI(msg));
+                    scrollToBottomChat();
+                }
+            } catch (err) {
+                console.error("Lỗi đồng bộ sảnh chat:", err.message);
+                area.innerHTML = `<p style="color:#e63946; text-align:center; font-size:13px; margin-top:180px;">Lỗi: Không thể kết nối cổng WebSockets phòng chat!</p>`;
+            }
+        }
+
+        // ==========================================
+        // THUẬT TOÁN RENDERING ĐỒ HỌA BONG BÓNG CHAT ZALO-STYLE
+        // ==========================================
+        function appendMessageToChatUI(msgObj) {
+            const area = document.getElementById("cityLiveChatArea");
+            if (document.getElementById(`chat-row-id-${msgObj.id}`)) return; // Chống vẽ lặp tin nhắn
+            
+            if (area.innerHTML.includes("Hệ thống đang mở cổng")) area.innerHTML = "";
+
+            const isMe = (msgObj.sender === CURRENT_USER);
+
+            // Dựng khung bọc tin nhắn trái/phải dựa trên người gửi
+            const wrapper = document.createElement("div");
+            wrapper.className = `msg-row ${isMe ? 'msg-me' : 'msg-other'}`;
+            wrapper.id = `chat-row-id-${msgObj.id}`;
+            wrapper.style.marginBottom = "5px";
+
+            // Nhãn hiển thị tên người gửi (nếu là người khác nhắn)
+            if (!isMe) {
+                const nameLbl = document.createElement("div");
+                nameLbl.style.cssText = "font-size:11px; font-weight:bold; color:#4a5568; margin-bottom:2px; padding-left:5px;";
+                nameLbl.innerText = `@${msgObj.sender}`;
+                // Tạo nhãn đỏ rực rỡ đặc trưng nếu chính Admin STDHenry nhắn tin vào sảnh tổng
+                if (msgObj.sender === 'STDHenry') {
+                    nameLbl.innerHTML += ` <span class="city-badge" style="background-color:#E63946; font-size:9px; padding:0px 4px;">ADMIN</span>`;
+                }
+                wrapper.appendChild(nameLbl);
+            }
+
+            // Bong bóng nội dung chữ văn bản
+            const bubble = document.createElement("div");
+            bubble.className = `msg-bubble ${isMe ? 'bubble-me' : 'bubble-other'}`;
+            bubble.innerText = msgObj.message;
+
+            // Mốc thời gian gửi tin nhắn nhỏ tinh tế dưới đáy bong bóng
+            const meta = document.createElement("div");
+            meta.style.cssText = "font-size:10px; color:#a0aec0; margin-top:2px;";
+            if (isMe) meta.style.textAlign = "right";
+            const timeString = new Date(msgObj.created_at).toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
+            meta.innerText = timeString;
+
+            wrapper.appendChild(bubble);
+            wrapper.appendChild(meta);
+            area.appendChild(wrapper);
+        }
+                // =========================================================
+        // 5. THUẬT TOÁN PHÁT TIN NHẮN LÊN PHÒNG CHAT TỔNG THỜI GIAN THỰC
+        // =========================================================
+        window.sendGeneralMessage = async function(event) {
+            event.preventDefault(); // Chặn hành vi tải lại trang mặc định của biểu mẫu
+            
+            const input = document.getElementById("cityChatInput");
+            const messageText = input.value.trim();
+            
+            if (messageText === "") return;
+            input.value = ""; // Dọn sạch thanh gõ ngay lập tức cho mượt giao diện
+
+            try {
+                // Chèn bản ghi chat công khai vào bảng city_chats trên Supabase Cloud [🗎1]
+                const { error } = await clientDB
+                    .from('city_chats')
+                    .insert([{
+                        sender: CURRENT_USER,
+                        message: messageText,
+                        is_report: false // Đánh dấu là tin nhắn sảnh tổng bình thường
+                    }]);
+
+                if (error) console.error("Lỗi gửi tin nhắn tổng:", error.message);
+
+            } catch (err) {
+                console.error("Sự cố mạng truyền tin nhắn:", err.message);
+            }
+        };
+
+        // =========================================================
+        // 6. THUẬT TOÁN PHÁT HỎA ĐƠN BÁO CÁO KHẨN CẤP GỬI THẲNG CHO ADMIN
+        // =========================================================
+        window.sendEmergencyReport = async function(event) {
+            event.preventDefault(); // Chặn hành vi tải lại trang
+            
+            const txtArea = document.getElementById("reportContentInput");
+            const reportText = txtArea.value.trim();
+
+            if (reportText === "") return;
+            txtArea.value = ""; // Dọn sạch ô nhập liệu báo cáo
+
+            try {
+                // Đóng gói đơn khiếu nại gửi đích danh tới Admin tài khoản tên STDHenry [🗎1]
+                const { error } = await clientDB
+                    .from('city_chats')
+                    .insert([{
+                        sender: CURRENT_USER,
+                        receiver: 'STDHenry', // Người tiếp nhận báo cáo mặc định của thành phố
+                        message: reportText,
+                        is_report: true // Kích hoạt nhãn báo cáo khẩn cấp [🗎1]
+                    }]);
+
+                if (!error) {
+                    alert("🚨 HỆ THỐNG: Đơn báo cáo vi phạm của bạn đã được mã hóa bảo mật và phát hỏa thành công gửi trực tiếp lên bàn làm việc của Admin @STDHenry!");
+                    // Tự động đẩy một dòng Popup thông báo cục bộ để người gửi yên tâm
+                    showNotificationPopup("ĐƯỜNG DÂY NÓNG", "Đơn báo cáo khẩn đã được gửi đi thành công.");
+                } else {
+                    alert("Lỗi khi phát hỏa đơn báo cáo: " + error.message);
+                }
+
+            } catch (err) {
+                console.error("Trục trặc đường truyền báo cáo:", err.message);
+                alert("Không thể kết nối tới máy chủ tiếp nhận đơn báo cáo!");
+            }
+        };
+
+        // Hàm tự động cuộn hộp bong bóng chat xuống tận cùng đáy
+        function scrollToBottomChat() {
+            const box = document.getElementById("cityLiveChatArea");
+            box.scrollTop = box.scrollHeight;
+        }
+    </script>
+</body>
+</html>
