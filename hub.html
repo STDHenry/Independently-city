@@ -144,15 +144,18 @@
         <!-- =========================================================
          JAVASCRIPT ĐIỀU KHIỂN LOGIC TRANG HUB CHỦ - PHẦN 3
          ========================================================= -->
+        <!-- =========================================================
+         BỘ NÃO JAVASCRIPT ĐIỀU KHIỂN LOGIC TRANG HUB CHỦ - PHẦN 2
+         ========================================================= -->
     <script type="module">
-        // Nhập trạm kết nối cơ sở dữ liệu và hàm báo popup từ file tiện ích
+        // Nhập trạm kết nối cơ sở dữ liệu và hàm báo popup từ file tiện ích toàn cục
         import { clientDB, showNotificationPopup } from './utils.js';
 
         let CURRENT_USER = "";
 
-        // Thuật toán tự động chạy để bốc danh tính cư dân từ file chủ index.html truyền xuống
+        // Thuật toán tự động chạy ngầm để bốc danh tính cư dân từ file chủ truyền xuống
         document.addEventListener("DOMContentLoaded", async () => {
-            // Đọc tên người dùng từ biến tạm window.parent của file tổng
+            // Đọc tên người dùng từ phiên đăng nhập window.parent của file tổng index.html
             CURRENT_USER = window.parent.LOGGED_IN_USER;
             
             if (!CURRENT_USER) {
@@ -160,22 +163,26 @@
                 return;
             }
 
-            // Gọi dữ liệu thông tin cá nhân của mình từ bảng city_users trên Supabase
-            const { data: profiles, error } = await clientDB
-                .from('city_users')
-                .select('*')
-                .eq('username', CURRENT_USER);
+            try {
+                // Gọi dữ liệu thông tin cá nhân của mình từ bảng city_users trên Supabase
+                const { data: profiles, error } = await clientDB
+                    .from('city_users')
+                    .select('*')
+                    .eq('username', CURRENT_USER);
 
-            if (!error && profiles && profiles.length > 0) {
-                const userProfile = profiles[0]; // Bốc dữ liệu dòng đầu tiên
+                if (!error && profiles && profiles.length > 0) {
+                    const userProfile = profiles[0]; // Bốc dữ liệu dòng đầu tiên
 
-                // Đổ văn bản thông tin lên giao diện màn hình
-                document.getElementById("profileUsername").innerText = userProfile.username;
-                document.getElementById("profileEmail").innerText = userProfile.email;
-                document.getElementById("profileBio").innerText = userProfile.bio || "Chưa có mô tả bản thân.";
-                
-                // Cập nhật trạng thái tích chọn của nút ẩn danh dựa trên database đám mây
-                document.getElementById("profileHiddenCheckbox").checked = userProfile.is_hidden;
+                    // Đổ văn bản thông tin lên giao diện màn hình
+                    document.getElementById("profileUsername").innerText = userProfile.username;
+                    document.getElementById("profileEmail").innerText = userProfile.email;
+                    document.getElementById("profileBio").innerText = userProfile.bio || "Chào mừng đến với Independent City!";
+                    
+                    // Cập nhật trạng thái tích chọn của nút ẩn danh dựa trên database đám mây
+                    document.getElementById("profileHiddenCheckbox").checked = userProfile.is_hidden;
+                }
+            } catch (err) {
+                console.error("Lỗi tải thông tin profile:", err.message);
             }
 
             // Đồng bộ trạng thái màu giao diện từ file chủ (nếu file chủ đang bật tối)
@@ -198,20 +205,10 @@
             }
         };
 
-        // Hàm gọi lệnh đăng xuất xuyên qua kính Iframe ép file chủ xử lý thu hồi quyền truy cập
-        window.triggerHubLogout = function() {
-            const confirmLogout = confirm("Independent City: Bạn có chắc chắn muốn đăng xuất và xóa phiên kết nối này không?");
-            if (confirmLogout) {
-                window.parent.logoutSystem(); // Gọi hàm đăng xuất gốc ở file index.html
-            }
-        };
-                // =========================================================
-        // 6. THUẬT TOÁN ĐỒNG BỘ CHẾ ĐỘ ẨN DANH (PRIVATE) LÊN SUPABASE
-        // =========================================================
+        // THUẬT TOÁN ĐỒNG BỘ CHẾ ĐỘ ẨN DANH (PRIVATE) LÊN SUPABASE
         window.updatePrivacyModeCloud = async function() {
             const isChecked = document.getElementById("profileHiddenCheckbox").checked;
 
-            // Tiến hành cập nhật trạng thái cột is_hidden lên đám mây
             const { error } = await clientDB
                 .from('city_users')
                 .update({ is_hidden: isChecked })
@@ -220,16 +217,14 @@
             if (!error) {
                 showNotificationPopup(
                     "CÀI ĐẶT", 
-                    isChecked ? "Hệ thống: Đã kích hoạt Chế độ ẩn danh. Profile của bạn hiện đã được giấu bảo mật vĩnh viễn!" : "Hệ thống: Đã tắt Chế độ ẩn danh. Profile của bạn hiện đã được công khai trên mạng lưới."
+                    isChecked ? "Hệ thống: Đã bật Chế độ ẩn danh. Profile của bạn hiện đã được giấu bảo mật!" : "Hệ thống: Đã tắt Chế độ ẩn danh. Profile của bạn hiện đã được công khai."
                 );
             } else {
                 alert("Lỗi cập nhật bảo mật: " + error.message);
             }
         };
 
-        // =========================================================
-        // 7. BỘ LỌC TÌM KIẾM TOÀN MẠNG CHỢ DỊCH VỤ VÀ CƯ DÂN
-        // =========================================================
+        // BỘ LỌC TÌM KIẾM TOÀN MẠNG CHỢ DỊCH VỤ VÀ CƯ DÂN
         window.triggerGlobalSearch = async function() {
             const keyword = document.getElementById("globalSearchInput").value.trim();
             const resultsArea = document.getElementById("searchResultsArea");
@@ -242,29 +237,27 @@
             resultsArea.innerHTML = `<p style='text-align:center; font-size:13px; color:#718096; margin-top:60px;'>Hệ thống đang quét toàn bộ Independent City...</p>`;
 
             try {
-                // HÀNH ĐỘNG 1: Lùng sục tìm kiếm cư dân công khai (Bỏ qua những ai bật chế độ ẩn danh)
+                // Lùng sục tìm kiếm cư dân công khai (Bỏ qua những ai bật chế độ ẩn danh)
                 const { data: usersData } = await clientDB
                     .from('city_users')
                     .select('*')
                     .ilike('username', `%${keyword}%`)
                     .eq('is_hidden', false);
 
-                // HÀNH ĐỘNG 2: Lùng sục tìm kiếm sản phẩm đang đăng bán trên Chợ tự doanh
+                // Lùng sục tìm kiếm sản phẩm đang đăng bán trên Chợ tự doanh
                 const { data: servicesData } = await clientDB
                     .from('city_services')
                     .select('*')
                     .ilike('title', `%${keyword}%`);
 
-                // Vẽ giao diện hiển thị kết quả tìm kiếm tổng hợp
                 resultsArea.innerHTML = `<h4 style='margin-top:0; border-bottom:1px dashed var(--black-pure); padding-bottom:5px;'>🔍 KẾT QUẢ QUÉT MẠNG LƯỚI</h4>`;
                 
-                if (window.parent.document.body.classList.contains('dark-theme')) {
+                if (document.body.classList.contains('dark-theme')) {
                     resultsArea.querySelector('h4').style.borderBottom = '1px dashed var(--white-pure)';
                 }
 
                 let hasResult = false;
 
-                // Render kết quả tìm kiếm Cư dân
                 if (usersData && usersData.length > 0) {
                     hasResult = true;
                     usersData.forEach(u => {
@@ -277,29 +270,33 @@
                     });
                 }
 
-                // Render kết quả tìm kiếm Sản phẩm/Dịch vụ
                 if (servicesData && servicesData.length > 0) {
                     hasResult = true;
                     servicesData.forEach(s => {
                         resultsArea.innerHTML += `
                             <div class="city-card" style="padding:12px; margin-bottom:10px; font-size:13px;">
                                 🛒 <b>Dịch vụ đang bán:</b> ${s.title} - <span style="font-weight:bold; color:var(--navy-dark);">${s.price} AD</span> <br>
-                                <span style="color:#718096; font-size:12px;">Người kinh doanh: @${s.seller} | Mô tả: ${s.description || 'Không.'}</span>
+                                <span style="color:#718096; font-size:12px;">Người kinh doanh: @${s.seller}</span>
                             </div>
                         `;
                     });
                 }
 
-                // Nếu quét không ra bất kỳ dữ liệu nào trùng khớp
                 if (!hasResult) {
-                    resultsArea.innerHTML += `<p style='text-align:center; font-size:13px; color:#e63946; margin-top:40px;'>Hệ thống: Không tìm thấy cư dân công khai hoặc sản phẩm nào trùng khớp với từ khóa của bạn!</p>`;
+                    resultsArea.innerHTML += `<p style='text-align:center; font-size:13px; color:#e63946; margin-top:40px;'>Hệ thống: Không tìm thấy kết quả nào trùng khớp!</p>`;
                 }
-
             } catch (err) {
                 console.error("Lỗi tra cứu mạng lưới:", err.message);
+            }
+        };
+
+        // Hàm gọi lệnh đăng xuất xuyên qua kính Iframe ép file chủ index.html xử lý
+        window.triggerHubLogout = function() {
+            const confirmLogout = confirm("Independent City: Bạn có chắc chắn muốn đăng xuất khỏi mạng lưới?");
+            if (confirmLogout) {
+                window.parent.logoutSystem(); // Gọi hàm đăng xuất gốc ở file index.html
             }
         };
     </script>
 </body>
 </html>
-
