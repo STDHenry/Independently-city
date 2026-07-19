@@ -143,11 +143,17 @@
     </div> <!-- Thẻ đóng kín của khối main-wrapper -->
 
     <!-- THẺ SCRIPT THƯỜNG: Đặt ngoài phạm vi module để nạp toàn cục lập tức chống liệt nút bấm -->
+    <!-- =========================================================
+         1. THẺ SCRIPT THƯỜNG: ĐỂ NẠP TOÀN CỤC CHỐNG ĐƠ NÚT VÀ NGHẼN MẠCH
+         ========================================================= -->
     <script>
+        // Hàm xử lý ẩn hiện luân phiên 3 form sảnh vào
         window.toggleGateView = function(viewName) {
             const login = document.getElementById("loginFormBox");
             const register = document.getElementById("registerFormBox");
             const otpBox = document.getElementById("otpVerifyFormBox");
+            
+            if (!login || !register || !otpBox) return;
             
             login.style.display = "none";
             register.style.display = "none";
@@ -157,34 +163,62 @@
             if (viewName === 'REGISTER') register.style.display = "block";
             if (viewName === 'OTP') otpBox.style.display = "block";
         };
+
+        // Hàm cổng trung gian hứng sự kiện Click từ các nút bấm HTML ngoài
+        window.handleGatewayAuth = function(type) {
+            if (typeof window.executeGatewayAuthCloud === 'function') {
+                window.executeGatewayAuthCloud(type);
+            } else {
+                console.error("Hệ thống: Trạm dữ liệu đám mây chưa nạp xong!");
+            }
+        };
+
+        // Hàm cổng trung gian hứng sự kiện Click xác minh OTP Admin Chess.com
+        window.verifyAdminOTPCloud = function() {
+            if (typeof window.executeVerifyAdminOTPCloud === 'function') {
+                window.executeVerifyAdminOTPCloud();
+            }
+        };
     </script>
-        <!-- =========================================================
-         JAVASCRIPT MODULE: XỬ LÝ ĐỒNG BỘ DỮ LIỆU ĐÁM MÂY - PHẦN 4
+
+        // Hàm cổng trung gian hứng sự kiện Click xác minh OTP Admin Chess.com
+        window.verifyAdminOTPCloud = function() {
+            if (typeof window.executeVerifyAdminOTPCloud === 'function') {
+                window.executeVerifyAdminOTPCloud();
+            }
+        };
+    </script>
+
+    <!-- =========================================================
+         2. THẺ SCRIPT MODULE: CHUYÊN XỬ LÝ LÕI ĐƯỜNG TRUYỀN SUPABASE CLOUD
          ========================================================= -->
     <script type="module">
-        // Nhập trạm kết nối cơ sở dữ liệu và hàm báo popup từ file tiện ích dùng chung
         import { clientDB, showNotificationPopup, setGlobalSession } from './utils.js';
 
-        // Biến lưu thông tin tài khoản đang đăng ký tạm thời chờ kích hoạt OTP
+        // Biến lưu thông tin tài khoản đăng ký tạm thời chờ kích hoạt OTP
         let TEMP_REGISTER_USER = "";
         let TEMP_REGISTER_EMAIL = "";
         let TEMP_REGISTER_PWD = "";
 
+        window.LOGGED_IN_USER = "";
+
         // Thuật toán chuyển đổi Tab động Single Page (SPA) độc lập dữ liệu giữa các phân khu [🗎1]
         window.switchHubTab = function(frameId) {
-            // LÁ CHẮN BẢO VỆ: Nếu chưa lọt sảnh thành công, khóa cứng thanh navbar [🗎1]
             if (!window.LOGGED_IN_USER) return; 
 
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
             document.querySelectorAll('.content-frame').forEach(frame => frame.classList.remove('active'));
 
-            event.currentTarget.classList.add('active');
+            if (event && event.currentTarget) {
+                event.currentTarget.classList.add('active');
+            }
             const targetFrame = document.getElementById(frameId);
-            targetFrame.classList.add('active');
-
-            if (targetFrame.src === "about:blank" || targetFrame.src === window.location.href) {
-                const fileName = frameId.replace('page-', '') + '.html';
-                targetFrame.src = fileName;
+            if (targetFrame) {
+                targetFrame.classList.add('active');
+                if (targetFrame.src === "about:blank" || targetFrame.src === window.location.href) {
+                    const fileName = frameId.replace('page-', '') + '.html';
+                    targetFrame.src = fileName;
+                }
             }
         };
 
@@ -205,11 +239,8 @@
             document.querySelectorAll('.content-frame').forEach(frame => frame.src = "about:blank");
         };
 
-        // =========================================================
-        // THUẬT TOÁN ĐĂNG KÝ VÀ ĐĂNG NHẬP MẬT KHẨU TĨNH TRUYỀN THỐNG
-        // =========================================================
-        window.handleGatewayAuth = async function(type) {
-            // LÁ CHẮN BẢO VỆ 1: Ép buộc cư dân phải tích chọn ký hợp đồng điều khoản mới cho đi tiếp
+        // LÕI XỬ LÝ: Thuật toán liên thông đăng ký / đăng nhập mật khẩu tĩnh [🗎1]
+        window.executeGatewayAuthCloud = async function(type) {
             const hasAgreed = document.getElementById("agreeCheckbox").checked;
             if (!hasAgreed) {
                 alert("⚠️ Yêu cầu bắt buộc: Bạn phải tích chọn ký chấp thuận điều khoản hợp đồng ở cột bên trái để tiếp tục!");
@@ -231,7 +262,6 @@
                     return;
                 }
 
-                // LÁ CHẮN BẢO VỆ 2: Quét bảng city_users xem Username này đã bị ai chiếm trước chưa
                 const { data: existUser } = await clientDB.from('city_users').select('username').eq('username', username);
                 if (existUser && existUser.length > 0) {
                     alert("Lỗi: Tên tài khoản này đã được sử dụng bởi cư dân khác!");
@@ -243,7 +273,7 @@
                 TEMP_REGISTER_EMAIL = email;
                 TEMP_REGISTER_PWD = password;
 
-                // Chuyển sang màn hình hướng dẫn lên Chess.com gặp Admin xin cấp mã OTP [🗎1]
+                // THÔNG MẠCH: Chuyển mượt mà sang màn hình nhập OTP hướng dẫn lên Chess.com [🗎1]
                 window.toggleGateView('OTP');
 
             } else if (type === 'login') {
@@ -255,43 +285,35 @@
                     return;
                 }
 
-                // TIẾN HÀNH KIỂM TRA ĐĂNG NHẬP MẬT KHẨU TĨNH TRÊN BẢNG CITY_USERS [🗎1]
                 const { data: users, error } = await clientDB
                     .from('city_users')
                     .select('*')
                     .eq('username', username)
                     .eq('password', password)
-                    .eq('is_verified', true); // Chỉ cho phép những ai đã được duyệt OTP kích hoạt vào [🗎1]
+                    .eq('is_verified', true); // Chặn những ai chưa duyệt OTP [🗎1]
 
                 if (error || !users || users.length === 0) {
                     alert("⚠️ Đăng nhập thất bại: Sai tài khoản, mật khẩu hoặc tài khoản của bạn chưa được Admin kích hoạt qua OTP!");
                     return;
                 }
 
-                // Đăng nhập thành công -> Ghi nhận danh tính toàn cục [🗎1]
-                window.LOGGED_IN_USER = users[0].username;
+                window.LOGGED_IN_USER = users[0].username; // Khắc phục lỗi bốc mảng dữ liệu dòng đầu tiên [🗎1]
                 setGlobalSession(window.LOGGED_IN_USER, users[0].email);
 
-                // Mở khóa ẩn cổng Gateway biến mất dữ liệu, chính thức lọt vào thành phố
                 document.getElementById("gateOverlay").style.display = "none";
                 showNotificationPopup("XÁC THỰC", `Chào mừng cư dân [${window.LOGGED_IN_USER}] đã đăng nhập mạng Independent City thành công!`);
-                
-                // Kích hoạt nạp file thực tế mặc định cho trang Hub Chủ đầu tiên
                 document.getElementById('page-hub').src = 'hub.html';
             }
         };
 
-        // =========================================================
-        // THUẬT TOÁN QUÉT MÃ SỐ OTP THỦ CÔNG DO ADMIN CẤP TRÊN CHESS.COM
-        // =========================================================
-        window.verifyAdminOTPCloud = async function() {
+        // LÕI XỬ LÝ: Thuật toán quét và tiêu hủy mã OTP thủ công trên database [🗎1]
+        window.executeVerifyAdminOTPCloud = async function() {
             const inputOTP = document.getElementById("adminOTPInput").value.trim();
             if (inputOTP === "") {
                 alert("Vui lòng điền mã số OTP 6 chữ số do Admin cấp để hoàn tất thủ tục!");
                 return;
             }
 
-            // TIẾN HÀNH QUÉT MÃ TRÊN BẢNG ĐÁM MÂY ADMIN_OTPS XEM CÓ TỒN TẠI KHÔNG [🗎1]
             const { data: validOtp, error } = await clientDB
                 .from('admin_otps')
                 .select('*')
@@ -303,27 +325,25 @@
             }
 
             try {
-                // CHÍNH THỨC KHAI SINH TÀI KHOẢN CƯ DÂN LÊN MÂY [🗎1]
-                // 1. Ghi bản ghi thông tin gồm Mật khẩu tĩnh vào bảng city_users
+                // CHÍNH THỨC KHAI SINH TÀI KHOẢN CƯ DÂN LÊN MÂY SUPABASE [🗎1]
                 await clientDB.from('city_users').insert([{ 
                     username: TEMP_REGISTER_USER, 
                     email: TEMP_REGISTER_EMAIL, 
                     password: TEMP_REGISTER_PWD,
-                    is_verified: true // Đánh dấu đã xác thực thành công [🗎1]
+                    is_verified: true 
                 }]);
 
-                // 2. Khởi tạo ví tiền cấp hạn mức vốn 1.000.000 AD trong city_bank [🗎1]
+                // Khởi tạo ví tiền cấp hạn mức vốn 1.000.000 AD trong city_bank [🗎1]
                 await clientDB.from('city_bank').insert([{ 
                     username: TEMP_REGISTER_USER, 
                     balance: 1000000 
                 }]);
 
-                // 3. Tiêu hủy mã OTP này khỏi bảng admin_otps trên cloud để tránh bị người khác xài lại [🗎1]
+                // Tiêu hủy mã OTP này khỏi bảng để tránh bị xài lại [🗎1]
                 await clientDB.from('admin_otps').delete().eq('otp_code', inputOTP);
 
                 alert(`🎉 CHÚC MỪNG: Mã OTP hợp lệ! Tài khoản @${TEMP_REGISTER_USER} đã được phê duyệt nhập tịch thành công đi kèm hạn mức 1.000.000 AD trong ví ngân hàng! Hãy tiến hành đăng nhập bằng mật khẩu.`);
                 
-                // Trả giao diện về sảnh đăng nhập mật khẩu tĩnh cho cư dân xài
                 window.toggleGateView('LOGIN');
                 document.getElementById("loginUser").value = TEMP_REGISTER_USER;
 
