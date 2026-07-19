@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Independent City - Trung Tâm Xử Lý Dịch Vụ Mạng</title>
     
-    <!-- Nhúng thư viện Supabase JS gốc lên đầu trang để xử lý kết nối máy chủ dữ liệu đám mây -->
+    <!-- Nhúng thư viện Supabase JS gốc lên đầu trang để kết nối dữ liệu đám mây -->
     <script src="https://jsdelivr.net"></script>
     <link rel="stylesheet" href="main.css">
     
@@ -40,7 +40,7 @@
         }
         .content-frame.active { display: block; }
 
-        /* LỚP PHỦ GATEWAY: ÉP KÝ ĐIỀU KHOẢN VÀ BẮT BUỘC DUYỆT TÀI KHOẢN THỦ CÔNG */
+        /* LỚP PHỦ GATEWAY: ÉP KÝ ĐIỀU KHOẢN VÀ CHẶN SẢNH ĐĂNG NHẬP */
         .gate-overlay {
             position: absolute; top: 0; left: 0; width: 100%; height: 100%;
             background: #ffffff; z-index: 100; display: flex; padding: 40px; box-sizing: border-box; gap: 40px;
@@ -66,9 +66,9 @@
                 <h3 style="margin-top:0; text-transform: uppercase; font-weight: 800; letter-spacing: 0.5px;">📜 HỢP ĐỒNG KÝ CHẤP THUẬN CƯ DÂN INDEPENDENT CITY</h3>
                 <div class="terms-box">
                     Welcome cư dân đến với <b>Trung tâm xử lý dịch vụ mạng Independent City</b>.<br><br>
-                    1. <b>Quy định tài chính phi doanh nghiệp:</b> Khi khởi tạo tài khoản thành công, bạn sẽ được cấp hạn mức vốn cố định là 1.000.000 AD trong ví Ngân hàng. Số tiền này dùng để giao dịch nội bộ trong phân khu Chợ tự doanh và chuyển khoản giữa các cư dân, lưu ý đây chỉ thuộc mô phỏng nên là tiền không có giá trị thực tế và không áp dụng luật doanh nghiệp do đó sau cảnh báo này và vẫn chấp thuận thì bạn đã chấp thuận điều khoản và tự chịu trách nhiệm.<br><br>
+                    1. <b>Quy định tài chính phi doanh nghiệp:</b> Khi khởi tạo tài khoản thành công, bạn sẽ được cấp hạn mức vốn cố định là 1.000.000 AD trong ví Ngân hàng. Số tiền này dùng để giao dịch nội bộ trong phân khu Chợ tự doanh và chuyển khoản giữa các cư dân.<br><br>
                     2. <b>Quyền bảo mật danh tính:</b> Hệ thống cung cấp Chế độ ẩn danh (Hidden Profile) trong mục Cài đặt. Khi kích hoạt, toàn bộ thông tin cá nhân của bạn sẽ được ẩn giấu, người khác sẽ không thể tra cứu hay xem trang cá nhân của bạn.<br><br>
-                    3. <b>Cơ chế xét duyệt tư cách cư dân:</b> Để chống bot rác và spam tài khoản phá hoại, Independent City áp dụng quy trình cấp mã OTP thủ công bởi Admin. Cư dân sau khi điền thông tin đăng ký bắt buộc phải liên hệ với Admin để nhận mã số kích hoạt tài khoản.<br><br>
+                    3. <b>Quy chuẩn lưu trữ danh tính:</b> Hệ thống sử dụng cơ chế lưu trữ thông tin mật khẩu tĩnh trực tiếp trên database đám mây độc lập. Cư dân có trách nhiệm tự bảo mật thông tin tài khoản đăng nhập của mình.<br><br>
                     4. Bằng việc tích chọn vào ô xác nhận dưới đây, bạn chính thức số hóa chữ ký của mình, chấp thuận toàn bộ điều khoản để mở khóa quyền sử dụng dịch vụ mạng Independent City.
                 </div>
                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 20px;">
@@ -76,55 +76,43 @@
                     <label for="agreeCheckbox" style="font-weight:bold; cursor:pointer; font-size: 14px;">Tôi xác nhận đồng ý và ký chấp thuận điều khoản trên ✍️</label>
                 </div>
             </div>
-                        <!-- Cột bên phải Form 1: Đăng nhập bằng Tên và Mật khẩu tĩnh truyền thống -->
+                        <!-- Cột bên phải Form 1: Đăng nhập bằng Tên HOẶC Email cực kỳ linh hoạt -->
             <div class="gate-panel" id="loginFormBox">
                 <h2 style="margin-top:0; text-transform: uppercase; font-weight: 800; color: #001F3F;">Đăng Nhập Cư Dân</h2>
                 <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản (Username):</label>
-                    <input type="text" id="loginUser" class="city-input" placeholder="Nhập tên tài khoản của bạn...">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản hoặc địa chỉ Email:</label>
+                    <input type="text" id="loginUserOrEmail" class="city-input" placeholder="Nhập tên tài khoản hoặc email của bạn...">
                 </div>
                 <div style="margin-bottom: 20px;">
                     <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Mật khẩu bảo mật:</label>
                     <input type="password" id="loginPwd" class="city-input" placeholder="Nhập mật khẩu...">
                 </div>
                 <button class="city-btn" onclick="handleGatewayAuth('login')">Đăng nhập vào Thành Phố 🏠</button>
-                <p style="font-size:12px; margin-top:20px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView('REGISTER')">Chưa có tài khoản? Bấm vào đây để đăng ký mới</p>
+                <p style="font-size:12px; margin-top:20px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView(true)">Chưa có tài khoản? Bấm vào đây để đăng ký mới</p>
             </div>
 
-            <!-- Cột bên phải Form 2: Điền thông tin Đăng ký tài khoản cư dân mới -->
+            <!-- Cột bên phải Form 2: Điền thông tin Đăng ký tài khoản cư dân mới tinh -->
             <div class="gate-panel" id="registerFormBox" style="display: none;">
                 <h2 style="margin-top:0; text-transform: uppercase; font-weight: 800; color: #001F3F;">Khởi Tạo Danh Tính</h2>
-                <div style="margin-bottom: 10px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:4px; font-size:12px;">Tên tài khoản muốn đặt:</label>
-                    <input type="text" id="regUser" class="city-input" placeholder="Ví dụ: HocSinhA">
+                <div style="margin-bottom: 12px;">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản muốn đặt (Username độc nhất):</label>
+                    <input type="text" id="regUser" class="city-input" placeholder="Ví dụ: HocSinhA" autocomplete="off">
                 </div>
-                <div style="margin-bottom: 10px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:4px; font-size:12px;">Địa chỉ Email:</label>
-                    <input type="email" id="regEmail" class="city-input" placeholder="nhap-email@gmail.com">
-                </div>
-                <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:4px; font-size:12px;">Thiết lập mật khẩu đăng nhập:</label>
-                    <input type="password" id="regPwd" class="city-input" placeholder="Nhập mật khẩu tự chọn...">
-                </div>
-                <button class="city-btn" onclick="handleGatewayAuth('register')" style="width: 100%;">Tiếp tục bước xác minh ➔</button>
-                <p style="font-size:12px; margin-top:15px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView('LOGIN')">Đã có tài khoản? Quay lại đăng nhập</p>
-            </div>
-                        <!-- CỔNG CÀI THÊM: Màn hình bảo người dùng đi xin mã số OTP của Admin Chess.com -->
-            <div class="gate-panel" id="otpVerifyFormBox" style="display: none;">
-                <h2 style="margin-top:0; text-transform: uppercase; font-weight: 800; color: #E63946;">🔒 XÁC MINH CƯ DÂN</h2>
-                <div class="city-card" style="padding:15px; background-color:#fff5f5; border-color:#E63946; font-size:12px; line-height:1.5; margin-bottom:15px;">
-                    📢 <b>HƯỚNG DẪN LẤY MÃ SỐ KÍCH HOẠT:</b><br>
-                    Để hoàn tất thủ tục nhập tịch, bạn vui lòng liên hệ ngay với <b>Admin STDHenry</b> qua nền tảng <b>Chess.com</b> hoặc các kênh câu lạc bộ để nhắn tin xin mã số kích hoạt cư dân [🗎1]. Khi nhận được dãy số OTP từ Admin, hãy nhập vào ô bên dưới!
+                <div style="margin-bottom: 12px;">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Địa chỉ Email:</label>
+                    <input type="email" id="regEmail" class="city-input" placeholder="nhap-email-cua-ban@gmail.com" autocomplete="off">
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Nhập mã số xác thực OTP do Admin cấp:</label>
-                    <input type="text" id="adminOTPInput" class="city-input" placeholder="Gõ mã OTP gồm 6 chữ số..." maxlength="6">
+                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Thiết lập mật khẩu an toàn:</label>
+                    <input type="password" id="regPwd" class="city-input" placeholder="Nhập mật khẩu tự chọn...">
                 </div>
-                <button class="city-btn" onclick="verifyAdminOTPCloud()" style="width: 100%; border-color:#E63946; color:#E63946;">KÍCH HOẠT TÀI KHOẢN VÀO THÀNH PHỐ</button>
+                <button class="city-btn" onclick="handleGatewayAuth('register')" style="width: 100%;">Hoàn tất thủ tục Nhập Tịch ➔</button>
+                <p style="font-size:12px; margin-top:20px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView(false)">Đã có tài khoản? Quay lại khung đăng nhập</p>
             </div>
         </div> <!-- Thẻ đóng kín của khối gate-overlay phủ sảnh -->
-
-        <!-- THANH NAVBAR CHỨA ICON EMOJI ĐỒNG BỘ ĐÚNG YÊU CẦU ĐỀ XUẤT CỦA BẠN -->
+                <!-- =========================================================
+             THANH NAVBAR TỔNG MANG BIỂU TƯỢNG EMOJI THEO ĐÚNG ĐỀ XUẤT CỦA BẠN
+             ========================================================= -->
         <div class="city-navbar">
             <div class="nav-item active" onclick="switchHubTab('page-hub')">🏠 Hub Chủ</div>
             <div class="nav-item" onclick="switchHubTab('page-bank')">🏦 Ngân Hàng</div>
@@ -132,7 +120,7 @@
             <div class="nav-item" onclick="switchHubTab('page-chat')">✉️ Tin Nhắn</div>
         </div>
 
-        <!-- HỆ THỐNG KHUNG IFRAME PHÂN TÁCH BIỆT LẬP CÁC FILE CON -->
+        <!-- HỆ THỐNG KHUNG IFRAME PHÂN TÁCH BIỆT LẬP CÁC FILE CON CỦA BẠN -->
         <iframe src="about:blank" id="page-hub" class="content-frame active"></iframe>
         <iframe src="about:blank" id="page-bank" class="content-frame"></iframe>
         <iframe src="about:blank" id="page-service" class="content-frame"></iframe>
@@ -140,69 +128,42 @@
 
         <!-- Hộp chứa Toast Popup tự động nhảy lên ở góc màn hình từ utils.js -->
         <div id="notification-container"></div>
-    </div> <!-- Thẻ đóng kín của khối main-wrapper -->
+    </div> <!-- Thẻ đóng kín của khối main-wrapper tổng -->
 
-    <!-- THẺ SCRIPT THƯỜNG: Đặt ngoài phạm vi module để nạp toàn cục lập tức chống liệt nút bấm -->
-    <!-- =========================================================
-         1. THẺ SCRIPT THƯỜNG: ĐỂ NẠP TOÀN CỤC CHỐNG ĐƠ NÚT VÀ NGHẼN MẠCH
-         ========================================================= -->
-        <!-- ĐÃ VÁ CHUẨN: Bọc kín thẻ script thường độc lập để nạp hàm toàn cục lập tức -->
+    <!-- SCRIPT THƯỜNG: Đặt ngoài phạm vi module để trình duyệt nạp toàn cục lập tức CHỐNG ĐƠ NÚT -->
     <script>
-        window.toggleGateView = function(viewName) {
-            const login = document.getElementById("loginFormBox");
-            const register = document.getElementById("registerFormBox");
-            const otpBox = document.getElementById("otpVerifyFormBox");
+        window.toggleGateView = function(showRegister) {
+            const loginBox = document.getElementById("loginFormBox");
+            const registerBox = document.getElementById("registerFormBox");
+            if (!loginBox || !registerBox) return;
             
-            if (!login || !register || !otpBox) return;
-            
-            login.style.display = "none";
-            register.style.display = "none";
-            otpBox.style.display = "none";
-            
-            if (viewName === 'LOGIN') login.style.display = "block";
-            if (viewName === 'REGISTER') register.style.display = "block";
-            if (viewName === 'OTP') otpBox.style.display = "block";
+            if (showRegister) {
+                loginBox.style.display = "none";
+                registerBox.style.display = "block";
+            } else {
+                loginBox.style.display = "block";
+                registerBox.style.display = "none";
+            }
         };
 
         window.handleGatewayAuth = function(type) {
             if (typeof window.executeGatewayAuthCloud === 'function') {
                 window.executeGatewayAuthCloud(type);
-            } else {
-                console.error("Hệ thống: Trạm dữ liệu đám mây chưa nạp xong!");
             }
         };
-
-        window.verifyAdminOTPCloud = function() {
-            if (typeof window.executeVerifyAdminOTPCloud === 'function') {
-                window.executeVerifyAdminOTPCloud();
-            }
-        };
-    </script> <!-- Nhớ đảm bảo có thẻ đóng này trước khi bước sang thẻ script type="module" -->
-
-    <script>
-        window.verifyAdminOTPCloud = function() {
-            if (typeof window.executeVerifyAdminOTPCloud === 'function') {
-                window.executeVerifyAdminOTPCloud();
-            }
-        };
-        </script>
     </script>
-
-    <!-- =========================================================
-         2. THẺ SCRIPT MODULE: CHUYÊN XỬ LÝ LÕI ĐƯỜNG TRUYỀN SUPABASE CLOUD
+        <!-- =========================================================
+         JAVASCRIPT MODULE: XỬ LÝ ĐỒNG BỘ DỮ LIỆU ĐÁM MÂY - PHẦN 4
          ========================================================= -->
     <script type="module">
+        // Nhập trạm kết nối cơ sở dữ liệu và hàm báo popup từ file tiện ích dùng chung
         import { clientDB, showNotificationPopup, setGlobalSession } from './utils.js';
-
-        // Biến lưu thông tin tài khoản đăng ký tạm thời chờ kích hoạt OTP
-        let TEMP_REGISTER_USER = "";
-        let TEMP_REGISTER_EMAIL = "";
-        let TEMP_REGISTER_PWD = "";
 
         window.LOGGED_IN_USER = "";
 
         // Thuật toán chuyển đổi Tab động Single Page (SPA) độc lập dữ liệu giữa các phân khu [🗎1]
         window.switchHubTab = function(frameId) {
+            // LÁ CHẮN BẢO VỆ: Nếu chưa đăng nhập thành công lọt sảnh, khóa cứng thanh navbar [🗎1]
             if (!window.LOGGED_IN_USER) return; 
 
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -215,8 +176,7 @@
             if (targetFrame) {
                 targetFrame.classList.add('active');
                 if (targetFrame.src === "about:blank" || targetFrame.src === window.location.href) {
-                    const fileName = frameId.replace('page-', '') + '.html';
-                    targetFrame.src = fileName;
+                    targetFrame.src = frameId.replace('page-', '') + '.html';
                 }
             }
         };
@@ -227,18 +187,17 @@
             document.getElementById("gateOverlay").style.display = "flex";
             document.getElementById("agreeCheckbox").checked = false;
             
-            document.getElementById("loginUser").value = "";
+            document.getElementById("loginUserOrEmail").value = "";
             document.getElementById("loginPwd").value = "";
             document.getElementById("regUser").value = "";
             document.getElementById("regEmail").value = "";
             document.getElementById("regPwd").value = "";
-            document.getElementById("adminOTPInput").value = "";
             
-            window.toggleGateView('LOGIN');
+            window.toggleGateView(false);
             document.querySelectorAll('.content-frame').forEach(frame => frame.src = "about:blank");
         };
 
-        // LÕI XỬ LÝ: Thuật toán liên thông đăng ký / đăng nhập mật khẩu tĩnh [🗎1]
+        // LÕI XỬ LÝ: Thuật toán liên thông Đăng ký / Đăng nhập Mật khẩu tĩnh truyền thống [🗎1]
         window.executeGatewayAuthCloud = async function(type) {
             const hasAgreed = document.getElementById("agreeCheckbox").checked;
             if (!hasAgreed) {
@@ -261,95 +220,82 @@
                     return;
                 }
 
+                // Kiểm tra trùng lặp username trên bảng city_users đám mây
                 const { data: existUser } = await clientDB.from('city_users').select('username').eq('username', username);
                 if (existUser && existUser.length > 0) {
                     alert("Lỗi: Tên tài khoản này đã được sử dụng bởi cư dân khác!");
                     return;
                 }
 
-                // Găm thông tin đăng ký tạm thời vào bộ nhớ chờ xác minh mã OTP Admin cấp
-                TEMP_REGISTER_USER = username;
-                TEMP_REGISTER_EMAIL = email;
-                TEMP_REGISTER_PWD = password;
+                try {
+                    // 1. Chèn thẳng tài khoản mật khẩu tĩnh vào bảng city_users trên mây [🗎1]
+                    await clientDB.from('city_users').insert([{ 
+                        username: username, 
+                        email: email, 
+                        password: password,
+                        bio: "Chào mừng đến với Independent City!"
+                    }]);
 
-                // THÔNG MẠCH: Chuyển mượt mà sang màn hình nhập OTP hướng dẫn lên Chess.com [🗎1]
-                window.toggleGateView('OTP');
+                    // 2. Khởi tạo ví tiền cấp hạn mức vốn 1.000.000 AD trong city_bank [🗎1]
+                    await clientDB.from('city_bank').insert([{ 
+                        username: username, 
+                        balance: 1000000 
+                    }]);
+
+                    alert(`🎉 ĐĂNG KÝ THÀNH CÔNG! Tài khoản @${username} đã được cấp ví vốn 1.000.000 AD trong hệ thống ngân hàng. Hãy quay lại đăng nhập bằng mật khẩu.`);
+                    window.toggleGateView(false);
+                    document.getElementById("loginUserOrEmail").value = username;
+
+                } catch (err) {
+                    alert("Hệ thống gặp trục trặc khi ghi nhận thông tin cư dân!");
+                }
 
             } else if (type === 'login') {
-                const username = document.getElementById("loginUser").value.trim();
+                const userOrEmail = document.getElementById("loginUserOrEmail").value.trim();
                 const password = document.getElementById("loginPwd").value.trim();
 
-                if (username === "" || password === "") {
-                    alert("Vui lòng nhập đầy đủ Tên tài khoản và Mật khẩu!");
+                if (userOrEmail === "" || password === "") {
+                    alert("Vui lòng nhập đầy đủ Tên tài khoản (hoặc Email) và Mật khẩu!");
                     return;
                 }
 
+                // TIẾN HÀNH KIỂM TRA ĐĂNG NHẬP MẬT KHẨU TĨNH LINH HOẠT (BẰNG TÊN HOẶC EMAIL ĐỀU ĐƯỢC) [🗎1]
                 const { data: users, error } = await clientDB
                     .from('city_users')
                     .select('*')
-                    .eq('username', username)
                     .eq('password', password)
-                    .eq('is_verified', true); // Chặn những ai chưa duyệt OTP [🗎1]
+                    .or(`username.eq."${userOrEmail}",email.eq."${userOrEmail}"`); // Đã bọc ngoặc kép chuỗi an toàn [🗎1]
 
                 if (error || !users || users.length === 0) {
-                    alert("⚠️ Đăng nhập thất bại: Sai tài khoản, mật khẩu hoặc tài khoản của bạn chưa được Admin kích hoạt qua OTP!");
+                    alert("⚠️ Đăng nhập thất bại: Sai tài khoản, email hoặc mật khẩu bảo mật!");
                     return;
                 }
 
-                window.LOGGED_IN_USER = users[0].username; // Khắc phục lỗi bốc mảng dữ liệu dòng đầu tiên [🗎1]
-                setGlobalSession(window.LOGGED_IN_USER, users[0].email);
+                const loggedUser = users[0]; // Bốc chính xác dòng dữ liệu đầu tiên lọt mảng [🗎1]
+                window.LOGGED_IN_USER = loggedUser.username;
+                setGlobalSession(window.LOGGED_IN_USER, loggedUser.email);
 
+                // Mở khóa biến mất sảnh Gateway, lọt thẳng vào phân khu con
                 document.getElementById("gateOverlay").style.display = "none";
                 showNotificationPopup("XÁC THỰC", `Chào mừng cư dân [${window.LOGGED_IN_USER}] đã đăng nhập mạng Independent City thành công!`);
                 document.getElementById('page-hub').src = 'hub.html';
             }
         };
 
-        // LÕI XỬ LÝ: Thuật toán quét và tiêu hủy mã OTP thủ công trên database [🗎1]
-        window.executeVerifyAdminOTPCloud = async function() {
-            const inputOTP = document.getElementById("adminOTPInput").value.trim();
-            if (inputOTP === "") {
-                alert("Vui lòng điền mã số OTP 6 chữ số do Admin cấp để hoàn tất thủ tục!");
-                return;
+        // TIỆN ÍCH BỔ SUNG: Nhấn phím Enter trên bàn phím tự động click nút đăng nhập / đăng ký nhanh
+        document.addEventListener("keydown", (event) => {
+            if (event.key === "Enter") {
+                const overlay = document.getElementById("gateOverlay");
+                if (overlay.style.display !== "none") {
+                    const loginBox = document.getElementById("loginFormBox");
+                    if (loginBox.style.display !== "none") {
+                        window.handleGatewayAuth('login');
+                    } else {
+                        window.handleGatewayAuth('register');
+                    }
+                }
             }
-
-            const { data: validOtp, error } = await clientDB
-                .from('admin_otps')
-                .select('*')
-                .eq('otp_code', inputOTP);
-
-            if (error || !validOtp || validOtp.length === 0) {
-                alert("⚠️ Kích hoạt thất bại: Mã OTP này không chính xác hoặc không nằm trong danh sách mã được Admin phê duyệt!");
-                return;
-            }
-
-            try {
-                // CHÍNH THỨC KHAI SINH TÀI KHOẢN CƯ DÂN LÊN MÂY SUPABASE [🗎1]
-                await clientDB.from('city_users').insert([{ 
-                    username: TEMP_REGISTER_USER, 
-                    email: TEMP_REGISTER_EMAIL, 
-                    password: TEMP_REGISTER_PWD,
-                    is_verified: true 
-                }]);
-
-                // Khởi tạo ví tiền cấp hạn mức vốn 1.000.000 AD trong city_bank [🗎1]
-                await clientDB.from('city_bank').insert([{ 
-                    username: TEMP_REGISTER_USER, 
-                    balance: 1000000 
-                }]);
-
-                // Tiêu hủy mã OTP này khỏi bảng để tránh bị xài lại [🗎1]
-                await clientDB.from('admin_otps').delete().eq('otp_code', inputOTP);
-
-                alert(`🎉 CHÚC MỪNG: Mã OTP hợp lệ! Tài khoản @${TEMP_REGISTER_USER} đã được phê duyệt nhập tịch thành công đi kèm hạn mức 1.000.000 AD trong ví ngân hàng! Hãy tiến hành đăng nhập bằng mật khẩu.`);
-                
-                window.toggleGateView('LOGIN');
-                document.getElementById("loginUser").value = TEMP_REGISTER_USER;
-
-            } catch (err) {
-                alert("Hệ thống gặp trục trặc khi ghi nhận thông tin kích hoạt cư dân!");
-            }
-        };
+        });
     </script>
 </body>
 </html>
