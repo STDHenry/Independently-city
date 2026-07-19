@@ -145,83 +145,13 @@
                 registerBox.style.display = "none";
             }
         };
-
-        window.handleGatewayAuth = function(type) {
-            if (typeof window.executeGatewayAuthCloud === 'function') {
-                window.executeGatewayAuthCloud(type);
-            }
-        };
-    </script>
-        <!-- =========================================================
-         JAVASCRIPT MODULE: XỬ LÝ ĐỒNG BỘ DỮ LIỆU ĐÁM MÂY - PHẦN 4
-         ========================================================= -->
-    <script type="module">
-        // Nhập trạm kết nối cơ sở dữ liệu và hàm báo popup từ file tiện ích dùng chung
-        import { getDB, showNotificationPopup, setGlobalSession } from './utils.js';
-
-        window.LOGGED_IN_USER = "";
-
-        // Thuật toán chuyển đổi Tab động Single Page (SPA) độc lập dữ liệu giữa các phân khu [🗎1]
-                // THÔNG MẠCH VERCEL: Thuật toán chuyển đổi Tab động bốc đúng URL gốc của trang web [🗎1]
-               // THÔNG MẠCH VERCEL: Thuật toán chuyển đổi Tab động bốc đúng URL gốc của trang web [🗎1]
-        window.switchHubTab = function(frameId) {
-            if (!window.LOGGED_IN_USER) return; 
-
-            document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
-            document.querySelectorAll('.content-frame').forEach(frame => frame.classList.remove('active'));
-
-            if (event && event.currentTarget) {
-                event.currentTarget.classList.add('active');
-            }
-            const targetFrame = document.getElementById(frameId);
-            if (targetFrame) {
-                targetFrame.classList.add('active');
-                
-                // VÁ CHUẨN: Sử dụng window.location.origin để trình duyệt bốc đúng link Vercel [🗎1]
-                if (targetFrame.src === "about:blank" || targetFrame.src === window.location.href) {
-                    const fileName = frameId.replace('page-', '') + '.html';
-                    const baseUrl = window.location.origin; 
-                    targetFrame.src = `${baseUrl}/${fileName}`;
-                }
-            }
-        };
-
-        // Hàm tiện ích đăng xuất nhanh, dọn sạch sảnh và trả Iframe về trạng thái đóng băng
-        window.logoutSystem = function() {
-            window.LOGGED_IN_USER = "";
-            document.getElementById("gateOverlay").style.display = "flex";
-            document.getElementById("agreeCheckbox").checked = false;
-            
-            document.getElementById("loginUserOrEmail").value = "";
-            document.getElementById("loginPwd").value = "";
-            document.getElementById("regUser").value = "";
-            document.getElementById("regEmail").value = "";
-            document.getElementById("regPwd").value = "";
-            
-            window.toggleGateView(false);
-            document.querySelectorAll('.content-frame').forEach(frame => frame.src = "about:blank");
-        };
-
-
-        // Hàm tiện ích đăng xuất nhanh, dọn sạch sảnh và trả Iframe về trạng thái đóng băng
-        window.logoutSystem = function() {
-            window.LOGGED_IN_USER = "";
-            document.getElementById("gateOverlay").style.display = "flex";
-            document.getElementById("agreeCheckbox").checked = false;
-            
-            document.getElementById("loginUserOrEmail").value = "";
-            document.getElementById("loginPwd").value = "";
-            document.getElementById("regUser").value = "";
-            document.getElementById("regEmail").value = "";
-            document.getElementById("regPwd").value = "";
-            
-            window.toggleGateView(false);
-            document.querySelectorAll('.content-frame').forEach(frame => frame.src = "about:blank");
-        };
-
-
-        // LÕI XỬ LÝ: Thuật toán liên thông Đăng ký / Đăng nhập Mật khẩu tĩnh truyền thống [🗎1]
         window.executeGatewayAuthCloud = async function(type) {
+            const db = getDB();
+            if (!db) {
+                alert("⏳ Hệ thống đang kết nối với đám mây bảo mật... Vui lòng đợi 1-2 giây rồi bấm lại nhé bạn!");
+                return;
+            }
+
             const hasAgreed = document.getElementById("agreeCheckbox").checked;
             if (!hasAgreed) {
                 alert("⚠️ Yêu cầu bắt buộc: Bạn phải tích chọn ký chấp thuận điều khoản hợp đồng ở cột bên trái để tiếp tục!");
@@ -243,24 +173,22 @@
                     return;
                 }
 
-                // Kiểm tra trùng lặp username trên bảng city_users đám mây
-                const { data: existUser } = await getDB().from('city_users').select('username').eq('username', username);
+                // Sửa từ clientDB.from hoặc getDB().from sang biến db.from ngắn gọn, an toàn [🗎1]
+                const { data: existUser } = await db.from('city_users').select('username').eq('username', username);
                 if (existUser && existUser.length > 0) {
                     alert("Lỗi: Tên tài khoản này đã được sử dụng bởi cư dân khác!");
                     return;
                 }
 
                 try {
-                    // 1. Chèn thẳng tài khoản mật khẩu tĩnh vào bảng city_users trên mây [🗎1]
-                    await getDB().from('city_users').insert([{ 
+                    await db.from('city_users').insert([{ 
                         username: username, 
                         email: email, 
                         password: password,
                         bio: "Chào mừng đến với Independent City!"
                     }]);
 
-                    // 2. Khởi tạo ví tiền cấp hạn mức vốn 1.000.000 AD trong city_bank [🗎1]
-                    await getDB().from('city_bank').insert([{ 
+                    await db.from('city_bank').insert([{ 
                         username: username, 
                         balance: 1000000 
                     }]);
@@ -273,7 +201,7 @@
                     alert("Hệ thống gặp trục trặc khi ghi nhận thông tin cư dân!");
                 }
 
-                                    } else if (type === 'login') {
+            } else if (type === 'login') {
                 const userOrEmail = document.getElementById("loginUserOrEmail").value.trim();
                 const password = document.getElementById("loginPwd").value.trim();
 
@@ -282,8 +210,8 @@
                     return;
                 }
 
-                // TIẾN HÀNH KIỂM TRA ĐĂNG NHẬP MẬT KHẨU TĨNH LINH HOẠT [🗎1]
-                const { data: users, error } = await getDB()
+                // Sửa sang biến db.from an toàn [🗎1]
+                const { data: users, error } = await db
                     .from('city_users')
                     .select('*')
                     .eq('password', password)
@@ -294,18 +222,475 @@
                     return;
                 }
 
-                // FIX CHUẨN MẢNG: Bốc chính xác phần tử đầu tiên lọt lưới [🗎1]
-                const loggedUser = users[0]; 
+                const loggedUser = users[0];
                 window.LOGGED_IN_USER = loggedUser.username;
                 setGlobalSession(window.LOGGED_IN_USER, loggedUser.email);
 
-                // Mở khóa biến mất sảnh Gateway
                 document.getElementById("gateOverlay").style.display = "none";
                 showNotificationPopup("XÁC THỰC", `Chào mừng cư dân [${window.LOGGED_IN_USER}] đã đăng nhập mạng Independent City thành công!`);
                 
-                // THÔNG MẠCH VERCEL: Gọi chính xác URL tuyệt đối của file hub.html để trình duyệt nạp động [🗎1]
-                const baseUrl = window.location.origin;
-                document.getElementById('page-hub').src = `${baseUrl}/hub.html`;
+                // Gọi hàm nổ súng nạp các module thời gian thực (Sẽ vá tiếp ở đợt 2)
+                await initializeCityAppModules();
+            }
+        };
+
+
+
+        // Hàm tiện ích đăng xuất nhanh, dọn sạch sảnh và trả Iframe về trạng thái đóng băng
+        window.logoutSystem = function() {
+            window.LOGGED_IN_USER = "";
+            document.getElementById("gateOverlay").style.display = "flex";
+            document.getElementById("agreeCheckbox").checked = false;
+            
+            document.getElementById("loginUserOrEmail").value = "";
+            document.getElementById("loginPwd").value = "";
+            document.getElementById("regUser").value = "";
+            document.getElementById("regEmail").value = "";
+            document.getElementById("regPwd").value = "";
+            
+            window.toggleGateView(false);
+            document.querySelectorAll('.content-frame').forEach(frame => frame.src = "about:blank");
+        };
+
+
+        // LÕI XỬ LÝ: Thuật toán liên thông Đăng ký / Đăng nhập Mật khẩu tĩnh truyền thống [🗎1]
+               // =========================================================
+        // 2. BỘ KHỞI ĐỘNG LIÊN THÔNG DỮ LIỆU ĐẦU VÀO KHI VÀO SẢNH (ĐÃ VÁ BIẾN DB)
+        // =========================================================
+        async function initializeCityAppModules() {
+            const db = getDB();
+            if (!db) return; // Lá chắn bảo vệ tuyệt đối nếu đám mây chưa nạp kịp [🗎1]
+
+            try {
+                // Hành động A: Tải thông tin Profile cá nhân đổ lên trang Hub Chủ
+                const { data: profiles } = await db.from('city_users').select('*').eq('username', window.LOGGED_IN_USER);
+                if (profiles && profiles.length > 0) {
+                    const uProfile = profiles[0];
+                    document.getElementById("profileUsername").innerText = uProfile.username;
+                    document.getElementById("profileEmail").innerText = uProfile.email;
+                    document.getElementById("profileBio").innerText = uProfile.bio || "Chào mừng đến với Independent City!";
+                    document.getElementById("profileHiddenCheckbox").checked = uProfile.is_hidden;
+                }
+
+                // Hành động B: Tải số dư ví tiền gốc từ đám mây nạp vào giao diện Ngân hàng
+                const { data: bankData } = await db.from('city_bank').select('balance').eq('username', window.LOGGED_IN_USER).single();
+                if (bankData) {
+                    CURRENT_BALANCE = bankData.balance;
+                    document.getElementById("liveBalanceAmount").innerText = CURRENT_BALANCE.toLocaleString("vi-VN");
+                }
+
+                // Hành động C: Kéo các hàm nổ súng phòng chat và sảnh chợ thời gian thực (Định nghĩa ở đợt sau)
+                await window.loadMarketDataCloud();
+                await window.fetchChatMessagesCloud();
+
+                // =========================================================
+                // KÍCH HOẠT LẮNG NGHE BIẾN ĐỘNG VÍ TIỀN REALTIME (WEBSOCKETS) [🗎1]
+                // =========================================================
+                db.channel('bank_realtime_ref')
+                    .on('postgres_changes', { event: 'UPDATE', schema: 'public', table: 'city_bank', filter: `username=eq.${window.LOGGED_IN_USER}` }, payload => {
+                        const oldBal = CURRENT_BALANCE;
+                        CURRENT_BALANCE = payload.new.balance;
+                        
+                        document.getElementById("liveBalanceAmount").innerText = CURRENT_BALANCE.toLocaleString("vi-VN");
+                        
+                        // Bắn Popup giật mượt mà từ góc màn hình lên từ bộ não utils.js [🗎1]
+                        if (CURRENT_BALANCE > oldBal) {
+                            showNotificationPopup("NGÂN HÀNG", `Ví AD: Được cộng +${(CURRENT_BALANCE - oldBal).toLocaleString()} AD thời gian thực! 💰`);
+                        } else if (CURRENT_BALANCE < oldBal) {
+                            showNotificationPopup("NGÂN HÀNG", `Ví AD: Đã trừ -${(oldBal - CURRENT_BALANCE).toLocaleString()} AD giao dịch thành công! 💸`);
+                        }
+                    })
+                    .subscribe();
+
+            } catch (err) {
+                console.error("Lỗi khởi tác mạch sảnh đám mây:", err.message);
+            }
+        }
+                // ==========================================
+        // 3. THUẬT TOÁN ĐỒNG BỘ CHẾ ĐỘ ẨN DANH LÊN CLOUD SUPABASE (ĐÃ VÁ BIẾN DB)
+        // ==========================================
+        window.updatePrivacyModeCloud = async function() {
+            const db = getDB();
+            if (!db) return; // Lá chắn bảo vệ nếu đám mây chưa nạp xong [🗎1]
+
+            const isChecked = document.getElementById("profileHiddenCheckbox").checked;
+            const { error } = await db.from('city_users').update({ is_hidden: isChecked }).eq('username', window.LOGGED_IN_USER);
+
+            if (!error) {
+                showNotificationPopup("CÀI ĐẶT", isChecked ? "Hệ thống: Đã bật Chế độ ẩn danh. Profile hiện đã được giấu bảo mật!" : "Hệ thống: Đã tắt Chế độ ẩn danh. Profile hiện đã được công khai trên mạng lưới.");
+            } else {
+                alert("Lỗi cập nhật bảo mật: " + error.message);
+            }
+        };
+
+        // THUẬT TOÁN ĐỔI MÀU GIAO DIỆN SÁNG / TỐI HỢP NHẤT TOÀN THÀNH PHỐ
+        window.changeSystemTheme = function() {
+            const selectValue = document.getElementById("themeSelect").value;
+            if (selectValue === "dark") {
+                document.body.classList.add('dark-theme');
+            } else {
+                document.body.classList.remove('dark-theme');
+            }
+        };
+
+        // Hàm Tiện ích vẽ lịch sử giao dịch tiền vào bảng lưới Ngân hàng
+        window.logTransactionToUI = function(type, target, amount) {
+            const area = document.getElementById("bankHistoryArea");
+            if (area.innerHTML.includes("Chưa ghi nhận biến động")) area.innerHTML = "";
+
+            const row = document.createElement("div");
+            row.className = "city-card";
+            row.style.cssText = "padding:10px; margin-bottom:8px; font-size:12px; border-style:dashed;";
+            
+            const time = new Date().toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+            if (type === 'SEND') {
+                row.innerHTML = `⏱️ <b>[${time}]</b> Gửi tới <span style="font-weight:bold;">@${target}</span> <br> <span style="color:#e63946; font-weight:bold;">-${amount.toLocaleString()} AD</span>`;
+            } else {
+                row.innerHTML = `⏱️ <b>[${time}]</b> Nhận từ <span style="font-weight:bold;">@${target}</span> <br> <span style="color:#2ed573; font-weight:bold;">+${amount.toLocaleString()} AD</span>`;
+            }
+            area.insertBefore(row, area.firstChild);
+        };
+
+        // =========================================================
+        // 4. THUẬT TOÁN THỰC THI GIAO DỊCH CHUYỂN KHOẢN LIÊN CƯ DÂN AN TOÀN (ĐÃ VÁ BIẾN DB)
+        // =========================================================
+        window.executeTransaction = async function(event) {
+            event.preventDefault(); // Chặn hành vi tải lại trang mặc định
+            const db = getDB();
+            if (!db) return; // Bảo vệ chống lỗi null [🗎1]
+            
+            const receiverInput = document.getElementById("targetReceiverInput").value.trim();
+            const amountInput = parseInt(document.getElementById("transferAmountInput").value);
+
+            if (receiverInput === "" || isNaN(amountInput) || amountInput <= 0) {
+                alert("Vui lòng nhập tên người nhận và số tiền chuyển hợp lệ!");
+                return;
+            }
+
+            // LÁ CHẮN BẢO VỆ 1: Chặn đứng hành vi tự chuyển khoản cho chính mình
+            if (receiverInput === window.LOGGED_IN_USER) {
+                alert("⚠️ Lỗi giao dịch: Bạn không thể tự chuyển khoản cho chính bản thân mình!");
+                return;
+            }
+
+            // LÁ CHẮN BẢO VỆ 2: Kiểm tra số dư ví, chặn chi tiêu vượt mức/ví âm
+            if (amountInput > CURRENT_BALANCE) {
+                alert(`⚠️ Giao dịch bị từ chối: Số dư tài khoản không đủ! Bạn hiện chỉ có ${CURRENT_BALANCE.toLocaleString()} AD.`);
+                return;
+            }
+
+            try {
+                // LÁ CHẮN BẢO VỆ 3: Quét bảng city_bank xem Username người nhận có tồn tại thực tế không
+                const { data: receiverWallet, error: checkErr } = await db
+                    .from('city_bank')
+                    .select('*')
+                    .eq('username', receiverInput)
+                    .single();
+
+                if (checkErr || !receiverWallet) {
+                    alert(`⚠️ Lỗi hệ thống: Không tìm thấy cư dân nào mang tên tài khoản @${receiverInput} trong cơ sở dữ liệu!`);
+                    return;
+                }
+
+                // --- THỰC THI DÒNG TIỀN SONG SONG QUA ĐÁM MÂY MƯỢT MÀ ---
+                // Bước A: Khấu trừ tài khoản người gửi
+                const newSenderBalance = CURRENT_BALANCE - amountInput;
+                const { error: sendErr } = await db
+                    .from('city_bank')
+                    .update({ balance: newSenderBalance })
+                    .eq('username', window.LOGGED_IN_USER);
+
+                if (sendErr) {
+                    alert("Giao dịch thất bại tại bước khấu trừ tài khoản!");
+                    return;
+                }
+
+                // Bước B: Cộng tiền vào tài khoản người nhận trên database
+                const newReceiverBalance = receiverWallet.balance + amountInput;
+                await db
+                    .from('city_bank')
+                    .update({ balance: newReceiverBalance })
+                    .eq('username', receiverInput);
+
+                // --- GIAO DỊCH THÀNH CÔNG MIÊN NHIỄM LỖI ---
+                CURRENT_BALANCE = newSenderBalance;
+                document.getElementById("liveBalanceAmount").innerText = CURRENT_BALANCE.toLocaleString("vi-VN");
+
+                // Vẽ lịch sử giao dịch ra bảng lưới Ngân hàng
+                window.logTransactionToUI('SEND', receiverInput, amountInput);
+
+                // Làm sạch form nhập liệu sảnh chuyển tiền
+                document.getElementById("targetReceiverInput").value = "";
+                document.getElementById("transferAmountInput").value = "";
+
+                showNotificationPopup("GIAO DỊCH", `Đã chuyển khoản thành công ${amountInput.toLocaleString()} AD tới cư dân @${receiverInput}! 💸`);
+
+            } catch (err) {
+                console.error("Trục trặc đường truyền giao dịch liên cư dân:", err.message);
+                alert("Hệ thống ngân hàng gặp sự cố đường truyền mạng!");
+            }
+        };
+                // =========================================================
+        // 5. THUẬT TOÁN TẢI VÀ ĐỒNG BỘ DANH SÁCH CHỢ DỊCH VỤ TỪ CLOUD (ĐÃ VÁ BIẾN DB)
+        // =========================================================
+        window.loadMarketDataCloud = async function() {
+            const db = getDB();
+            const grid = document.getElementById("marketProductsGrid");
+            if (!db || !grid) return;
+            
+            try {
+                const { data: services, error } = await db.from('city_services').select('*').order('created_at', { ascending: false });
+                if (error) throw error;
+                GLOBAL_PRODUCTS_LIST = services || [];
+                window.renderProductsToUI(GLOBAL_PRODUCTS_LIST);
+            } catch (err) {
+                console.error("Lỗi đồng bộ danh mục chợ:", err.message);
+                grid.innerHTML = `<p style="color:#e63946; text-align:center; font-size:13px; margin-top:5px;">Lỗi: Không thể kết nối dữ liệu Chợ tự doanh!</p>`;
+            }
+        };
+
+        // =========================================================
+        // 6. THUẬT TOÁN PHÁT HÀNH SẢN PHẨM / DỊCH VỤ MỚI LÊN MÂY (ĐÃ VÁ BIẾN DB)
+        // =========================================================
+        window.publishNewService = async function(event) {
+            event.preventDefault();
+            const db = getDB();
+            if (!db) return;
+
+            const title = document.getElementById("prodTitleInput").value.trim();
+            const description = document.getElementById("prodDescInput").value.trim();
+            const imageUrl = document.getElementById("prodImageInput").value.trim() || "https://unsplash.com"; 
+            const price = parseInt(document.getElementById("prodPriceInput").value);
+
+            if (title === "" || description === "" || isNaN(price)) {
+                alert("Vui lòng điền đầy đủ thông tin sản phẩm bắt buộc!");
+                return;
+            }
+
+            // LÁ CHẮN BẢO VỆ PHI DOANH NGHIỆP: Kiểm tra nghiêm ngặt mức giá chặn trần không quá 1000 AD [1]
+            if (price < 1 || price > 1000) {
+                alert("⚠️ Đăng tin bị từ chối: Theo quy chuẩn Independent City, giá bán của 1 sản phẩm bắt buộc phải từ 1 đến 1000 AD! [1]");
+                return;
+            }
+
+            try {
+                const { error } = await db.from('city_services').insert([{
+                    seller: window.LOGGED_IN_USER,
+                    title: title,
+                    description: description,
+                    price: price,
+                    image_url: imageUrl,
+                    reviews: []
+                }]);
+                if (error) throw error;
+
+                showNotificationPopup("CHỢ TỰ DOANH", `Sản phẩm [${title}] của bạn đã được phát hành thành công với giá ${price} AD! 🛒`);
+                document.getElementById("cityUploadProductForm").reset();
+                window.toggleNewServiceForm();
+                await window.loadMarketDataCloud();
+            } catch (err) { alert("Gặp sự cố khi đẩy thông tin: " + err.message); }
+        };
+
+        // =========================================================
+        // 7. THUẬT TOÁN RENDERING ĐỒ HỌA CHỢ VÀ HỘP ĐÁNH GIÁ SAO
+        // =========================================================
+        window.renderProductsToUI = function(products) {
+            const grid = document.getElementById("marketProductsGrid");
+            if (!grid) return;
+            grid.innerHTML = "";
+
+            if (products.length === 0) {
+                grid.innerHTML = `<p style="color:#718096; text-align:center; font-size:13px; margin-top:5px;">Không tìm thấy dịch vụ nào đang đăng bán...</p>`;
+                return;
+            }
+
+            products.forEach(p => {
+                const isMyOwn = (p.seller === window.LOGGED_IN_USER);
+                const revArray = p.reviews || [];
+                
+                let avgStars = 0;
+                if (revArray.length > 0) {
+                    const totalStars = revArray.reduce((acc, cur) => acc + parseInt(cur.stars || 5), 0);
+                    avgStars = (totalStars / revArray.length).toFixed(1);
+                }
+
+                let reviewsListHtml = "";
+                revArray.slice(-5).forEach(r => {
+                    reviewsListHtml += `
+                        <div style="font-size:11px; border-top:1px dashed #cbd5e0; padding-top:4px; margin-top:4px; color:#000000;">
+                            ⭐ <b>${r.stars}/5 Sao</b> bởi <i>@${r.reviewer}</i>: "${r.comment}"
+                        </div>
+                    `;
+                });
+
+                const card = document.createElement("div");
+                card.className = "city-card";
+                card.style.cssText = "display: flex; gap: 15px; padding: 15px; position:relative; align-items: flex-start; text-align: left; margin-bottom: 10px;";
+
+                card.innerHTML = `
+                    <img src="${p.image_url}" style="width: 80px; height: 80px; object-fit: cover; border: 1px solid var(--black-pure);" class="prod-img" alt="Product">
+                    <div style="flex: 1; min-width: 0;">
+                        <div style="font-weight: 800; font-size: 15px; text-transform: uppercase;">${p.title}</div>
+                        <div style="font-size: 12px; color: #718096; margin-top: 3px; margin-bottom: 5px;">Người bán: <b>@${p.seller}</b> | Đánh giá: <b>${revArray.length > 0 ? avgStars + ' ⭐' : 'Chưa có'}</b> (${revArray.length}/100)</div>
+                        <div style="font-size: 13px; line-height: 1.4; word-break: break-word;">${p.description}</div>
+                        
+                        <div style="margin-top:10px; background-color: var(--gray-light); padding: 5px 10px;" class="reviews-container-box">
+                            <span style="font-size:11px; font-weight:bold; color:var(--navy-dark);" class="rev-lbl">💬 Nhận xét của cư dân:</span>
+                            ${revArray.length === 0 ? '<div style="font-size:11px; color:#a0aec0; font-style: italic;">Chưa có đánh giá nào.</div>' : reviewsListHtml}
+                        </div>
+                    </div>
+                    
+                    <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end; width: 120px;">
+                        <div style="font-size: 18px; font-weight: 900; color: var(--navy-dark);" class="price-lbl">${p.price} AD</div>
+                        ${isMyOwn ? 
+                            `<span class="city-badge" style="background-color:#718096;">Đồ của bạn</span>` : 
+                            `<button class="city-btn" style="padding: 6px 12px; font-size:11px;" onclick="purchaseServiceCloud(${p.id}, '${p.seller}', ${p.price})">MUA NGAY 🛒</button>`
+                        }
+                    </div>
+                `;
+
+                grid.appendChild(card);
+            });
+
+            if (document.body.classList.contains('dark-theme')) {
+                document.querySelectorAll('.reviews-container-box').forEach(b => b.style.backgroundColor = '#1a1a1a');
+                document.querySelectorAll('.price-lbl').forEach(l => l.style.color = 'var(--white-pure)');
+                document.querySelectorAll('.rev-lbl').forEach(l => l.style.color = 'var(--white-pure)');
+                document.querySelectorAll('.prod-img').forEach(i => i.style.borderColor = 'var(--white-pure)');
+            }
+        };
+
+        window.filterMarketProducts = function() {
+            const keyword = document.getElementById("marketSearchInput").value.trim().toLowerCase();
+            if (keyword === "") {
+                window.renderProductsToUI(GLOBAL_PRODUCTS_LIST);
+                return;
+            }
+            const filtered = GLOBAL_PRODUCTS_LIST.filter(p => p.title.toLowerCase().includes(keyword));
+            window.renderProductsToUI(filtered);
+        };
+
+        // =========================================================
+        // 7. THUẬT TOÁN MUA SẢN PHẨM LIÊN THÔNG VÍ & REVIEW SAO (ĐÃ VÁ BIẾN DB)
+        // =========================================================
+        window.purchaseServiceCloud = async function(prodId, sellerName, priceAmount) {
+            const db = getDB();
+            if (!db) return;
+            const confirmBuy = confirm(`Bạn có chắc chắn muốn bỏ ra ${priceAmount} AD để mua dịch vụ này không? Hệ thống ngân hàng sẽ tự động khấu trừ ví tiền của bạn.`);
+            if (!confirmBuy) return;
+
+            try {
+                const { data: myWallet } = await db.from('city_bank').select('*').eq('username', window.LOGGED_IN_USER).single();
+                if (!myWallet || myWallet.balance < priceAmount) {
+                    alert(`⚠️ Giao dịch bị từ chối: Số dư ví không đủ! Bạn thiếu ${priceAmount - (myWallet ? myWallet.balance : 0)} AD. Hãy vào tab Ngân hàng cày tiền!`);
+                    return;
+                }
+
+                const { data: sellerWallet } = await db.from('city_bank').select('*').eq('username', sellerName).single();
+                if (!sellerWallet) {
+                    alert("Lỗi: Ví ngân hàng của người bán hiện không tồn tại hoặc bị đóng băng!");
+                    return;
+                }
+
+                await db.from('city_bank').update({ balance: myWallet.balance - priceAmount }).eq('username', window.LOGGED_IN_USER);
+                await db.from('city_bank').update({ balance: sellerWallet.balance + priceAmount }).eq('username', sellerName);
+
+                showNotificationPopup("CHỢ TỰ DOANH", `Giao dịch thành công! Đã chuyển thanh toán ${priceAmount} AD tới cư dân @${sellerName}. 💸`);
+
+                const comment = prompt("✍️ MỜI BẠN ĐÁNH GIÁ SẢN PHẨM:\nHãy để lại một dòng nhận xét ngắn về chất lượng dịch vụ:");
+let stars = prompt("Chọn số sao đánh giá (Nhập từ số 1 đến 5):", "5");stars = parseInt(stars);if (isNaN(stars) || stars < 1 || stars > 5) stars = 5;const cleanComment = comment ? comment.trim() : "Cư dân không để lại bình luận.";const targetProd = GLOBAL_PRODUCTS_LIST.find(x => x.id === prodId);if (targetProd) {let currentReviews = targetProd.reviews || [];if (currentReviews.length >= 100) currentReviews.shift();currentReviews.push({ reviewer: window.LOGGED_IN_USER, stars: stars, comment: cleanComment });await db.from('city_services').update({ reviews: currentReviews }).eq('id', prodId);}await window.loadMarketDataCloud();} catch (err) { alert("Giao dịch gặp lỗi đường truyền mạng: " + err.message); }};/* KHÓA ĐỢT 2C: PHÒNG CHAT WEBSOCKET REALTIME VÀ ĐƯỜNG DÂY NÓNG ADMIN SẼ ĐƯỢC CHỐT HẠ Ở ĐỢT 2D */
+        // =========================================================
+        // 8. BỘ NÃO XỬ LÝ PHÒNG CHAT SẢNH TỔNG VÀ ĐƯỜNG DÂY NÓNG ADMIN (ĐÃ VÁ BIẾN DB)
+        // =========================================================
+        window.fetchChatMessagesCloud = async function() {
+            const db = getDB();
+            const area = document.getElementById("cityLiveChatArea");
+            if (!db || !area) return;
+            try {
+                // Chỉ kéo các tin nhắn sảnh tổng (is_report = false), xếp theo thời gian gửi
+                const { data: messages } = await db.from('city_chats').select('*').eq('is_report', false).order('created_at', { ascending: true }).limit(100);
+                if (messages) {
+                    area.innerHTML = ""; // Dọn sạch dòng chữ "Đang kết nối..."
+                    messages.forEach(msg => appendMessageToChatUI(msg));
+                    boxChatScrollToBottom();
+                }
+            } catch (err) { console.error(err); }
+        };
+
+        // Thuật toán vẽ bong bóng tin nhắn trái/phải lên giao diện sảnh chat
+        function appendMessageToChatUI(msgObj) {
+            const area = document.getElementById("cityLiveChatArea");
+            if (!area || document.getElementById(`msg-id-ref-${msgObj.id}`)) return; // Chống vẽ lặp tin nhắn
+
+            const isMe = (msgObj.sender === window.LOGGED_IN_USER);
+            const wrapper = document.createElement("div");
+            wrapper.className = `msg-row ${isMe ? 'msg-me' : 'msg-other'}`;
+            wrapper.id = `msg-id-ref-${msgObj.id}`;
+            wrapper.style.marginBottom = "5px";
+
+            // Hiện nhãn tên cư dân nếu là người khác nhắn
+            if (!isMe) {
+                const nameLbl = document.createElement("div");
+                nameLbl.style.cssText = "font-size:11px; font-weight:bold; color:#4a5568; margin-bottom:2px; padding-left:5px;";
+                nameLbl.innerText = `@${msgObj.sender}`;
+                // Tạo huy hiệu đỏ rực rỡ đặc trưng nếu chính Admin STDHenry nhắn tin vào sảnh tổng
+                if (msgObj.sender === 'STDHenry') {
+                    nameLbl.innerHTML += ` <span class="city-badge" style="background-color:#E63946; font-size:9px; padding:0px 4px;">ADMIN</span>`;
+                }
+                wrapper.appendChild(nameLbl);
+            }
+
+            const bubble = document.createElement("div");
+            bubble.className = `msg-bubble ${isMe ? 'bubble-me' : 'bubble-other'}`;
+            bubble.innerText = msgObj.message;
+
+            const meta = document.createElement("div");
+            meta.style.cssText = "font-size:10px; color:#a0aec0; margin-top:2px;";
+            if (isMe) meta.style.textAlign = "right";
+            meta.innerText = new Date(msgObj.created_at).toLocaleTimeString("vi-VN", { hour: '2-digit', minute: '2-digit' });
+
+            wrapper.appendChild(bubble);
+            wrapper.appendChild(meta);
+            area.appendChild(wrapper);
+        }
+
+        // Đẩy tin nhắn gõ từ form biểu mẫu lên sảnh tổng đám mây
+        window.sendGeneralMessage = async function(event) {
+            event.preventDefault();
+            const db = getDB();
+            const input = document.getElementById("cityChatInput");
+            const txt = input.value.trim();
+            if (!db || txt === "") return;
+            input.value = ""; // Dọn sạch thanh gõ lập tức cho mượt giao diện
+            await db.from('city_chats').insert([{ sender: window.LOGGED_IN_USER, message: txt, is_report: false }]);
+        };
+
+        // Gửi đơn khiếu nại vi phạm gửi đích danh lên Admin STDHenry [🗎1]
+        window.sendEmergencyReport = async function(event) {
+            event.preventDefault();
+            const db = getDB();
+            const area = document.getElementById("reportContentInput");
+            const txt = area.value.trim();
+            if (!db || txt === "") return;
+            area.value = ""; // Dọn sạch ô nhập liệu báo cáo
+
+            const { error } = await db.from('city_chats').insert([{ sender: window.LOGGED_IN_USER, receiver: 'STDHenry', message: txt, is_report: true }]);
+            if (!error) {
+                alert("🚨 Đơn báo cáo vi phạm của bạn đã được mã hóa gửi thẳng trực tiếp lên bàn làm việc của Admin @STDHenry!");
+                showNotificationPopup("ĐƯỜNG DÂY NÓNG", "Đơn báo cáo khẩn đã được phát hỏa thành công.");
+            }
+        };
+
+        // Tự động cuộn hộp thoại chat xuống tận cùng đáy
+        function boxChatScrollToBottom() {
+            const box = document.getElementById("cityLiveChatArea");
+            if (box) box.scrollTop = box.scrollHeight;
+        }
+
+        // Cửa ngõ gọi hàm Đăng xuất dọn sạch sảnh ngầm toàn cục
+        window.triggerLogout = function() {
+            if (confirm("Independent City: Bạn có chắc chắn muốn đăng xuất khỏi mạng lưới?")) {
+                window.logoutSystem();
             }
         };
     </script>
