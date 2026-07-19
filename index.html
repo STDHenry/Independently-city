@@ -131,7 +131,11 @@
     </div> <!-- Thẻ đóng kín của khối main-wrapper tổng -->
 
     <!-- SCRIPT THƯỜNG: Đặt ngoài phạm vi module để trình duyệt nạp toàn cục lập tức CHỐNG ĐƠ NÚT -->
+        <!-- =========================================================
+         1. THẺ SCRIPT THƯỜNG: ĐỂ NẠP TOÀN CỤC CHỐNG ĐƠ NÚT VÀ LỖI NOT DEFINED
+         ========================================================= -->
     <script>
+        // Ép thẳng hàm lật form vào window toàn cục để HTML onclick gọi trúng 100% [🗎1]
         window.toggleGateView = function(showRegister) {
             const loginBox = document.getElementById("loginFormBox");
             const registerBox = document.getElementById("registerFormBox");
@@ -145,13 +149,16 @@
                 registerBox.style.display = "none";
             }
         };
-        window.executeGatewayAuthCloud = async function(type) {
-            const db = getDB();
-            if (!db) {
-                alert("⏳ Hệ thống đang kết nối với đám mây bảo mật... Vui lòng đợi 1-2 giây rồi bấm lại nhé bạn!");
-                return;
-            }
 
+        // ÉP CHẶT VÀO WINDOW: Sửa triệt để lỗi 'handleGatewayAuth is not defined' [🗎1]
+        window.handleGatewayAuth = function(type) {
+            if (typeof window.executeGatewayAuthCloud === 'function') {
+                window.executeGatewayAuthCloud(type);
+            } else {
+                alert("⏳ Máy chủ đám mây đang khởi động... Vui lòng đợi 1 giây rồi bấm lại nhé cư dân!");
+            }
+        };
+        window.executeGatewayAuthCloud = async function(type) {
             const hasAgreed = document.getElementById("agreeCheckbox").checked;
             if (!hasAgreed) {
                 alert("⚠️ Yêu cầu bắt buộc: Bạn phải tích chọn ký chấp thuận điều khoản hợp đồng ở cột bên trái để tiếp tục!");
@@ -542,12 +549,21 @@
                     
                     <div style="display: flex; flex-direction: column; gap: 8px; align-items: flex-end; width: 120px;">
                         <div style="font-size: 18px; font-weight: 900; color: var(--navy-dark);" class="price-lbl">${p.price} AD</div>
-                        ${isMyOwn ? 
-                            `<span class="city-badge" style="background-color:#718096;">Đồ của bạn</span>` : 
-                            `<button class="city-btn" style="padding: 6px 12px; font-size:11px;" onclick="purchaseServiceCloud(${p.id}, '${p.seller}', ${p.price})">MUA NGAY 🛒</button>`
-                        }
+                        <div class="action-slot"></div>
                     </div>
                 `;
+
+                const actionSlot = card.querySelector('.action-slot');
+                if (isMyOwn) {
+                    actionSlot.innerHTML = `<span class="city-badge" style="background-color:#718096;">Đồ của bạn</span>`;
+                } else {
+                    const buyButton = document.createElement('button');
+                    buyButton.className = 'city-btn';
+                    buyButton.style.cssText = 'padding: 6px 12px; font-size:11px;';
+                    buyButton.textContent = 'MUA NGAY 🛒';
+                    buyButton.addEventListener('click', () => purchaseServiceCloud(p.id, p.seller, p.price));
+                    actionSlot.appendChild(buyButton);
+                }
 
                 grid.appendChild(card);
             });
