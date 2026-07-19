@@ -162,8 +162,8 @@
         window.LOGGED_IN_USER = "";
 
         // Thuật toán chuyển đổi Tab động Single Page (SPA) độc lập dữ liệu giữa các phân khu [🗎1]
+                // THÔNG MẠCH VERCEL: Thuật toán chuyển đổi Tab động bốc đúng URL gốc của trang web [🗎1]
         window.switchHubTab = function(frameId) {
-            // LÁ CHẮN BẢO VỆ: Nếu chưa đăng nhập thành công lọt sảnh, khóa cứng thanh navbar [🗎1]
             if (!window.LOGGED_IN_USER) return; 
 
             document.querySelectorAll('.nav-item').forEach(item => item.classList.remove('active'));
@@ -175,13 +175,17 @@
             const targetFrame = document.getElementById(frameId);
             if (targetFrame) {
                 targetFrame.classList.add('active');
+                
+                // VÁ CHUẨN: Sử dụng window.location.origin để trình duyệt bốc đúng link Vercel [🗎1]
                 if (targetFrame.src === "about:blank" || targetFrame.src === window.location.href) {
-                    targetFrame.src = frameId.replace('page-', '') + '.html';
+                    const fileName = frameId.replace('page-', '') + '.html';
+                    const baseUrl = window.location.origin; 
+                    targetFrame.src = `${baseUrl}/${fileName}`;
                 }
             }
         };
 
-        // Hàm tiện ích đăng xuất nhanh, xóa sạch dữ liệu cũ và đóng băng Iframe con
+        // Hàm tiện ích đăng xuất nhanh, dọn sạch sảnh và trả Iframe về trạng thái đóng băng
         window.logoutSystem = function() {
             window.LOGGED_IN_USER = "";
             document.getElementById("gateOverlay").style.display = "flex";
@@ -196,6 +200,7 @@
             window.toggleGateView(false);
             document.querySelectorAll('.content-frame').forEach(frame => frame.src = "about:blank");
         };
+
 
         // LÕI XỬ LÝ: Thuật toán liên thông Đăng ký / Đăng nhập Mật khẩu tĩnh truyền thống [🗎1]
         window.executeGatewayAuthCloud = async function(type) {
