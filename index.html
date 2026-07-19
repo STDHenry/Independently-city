@@ -255,7 +255,7 @@
                     alert("Hệ thống gặp trục trặc khi ghi nhận thông tin cư dân!");
                 }
 
-            } else if (type === 'login') {
+                        } else if (type === 'login') {
                 const userOrEmail = document.getElementById("loginUserOrEmail").value.trim();
                 const password = document.getElementById("loginPwd").value.trim();
 
@@ -264,27 +264,32 @@
                     return;
                 }
 
-                // TIẾN HÀNH KIỂM TRA ĐĂNG NHẬP MẬT KHẨU TĨNH LINH HOẠT (BẰNG TÊN HOẶC EMAIL ĐỀU ĐƯỢC) [🗎1]
+                // TIẾN HÀNH KIỂM TRA ĐĂNG NHẬP MẬT KHẨU TĨNH LINH HOẠT [🗎1]
                 const { data: users, error } = await clientDB
                     .from('city_users')
                     .select('*')
                     .eq('password', password)
-                    .or(`username.eq."${userOrEmail}",email.eq."${userOrEmail}"`); // Đã bọc ngoặc kép chuỗi an toàn [🗎1]
+                    .or(`username.eq."${userOrEmail}",email.eq."${userOrEmail}"`);
 
                 if (error || !users || users.length === 0) {
                     alert("⚠️ Đăng nhập thất bại: Sai tài khoản, email hoặc mật khẩu bảo mật!");
                     return;
                 }
 
-                const loggedUser = users[0]; // Bốc chính xác dòng dữ liệu đầu tiên lọt mảng [🗎1]
+                // FIX CHUẨN MẢNG: Bốc chính xác phần tử đầu tiên lọt lưới [🗎1]
+                const loggedUser = users[0]; 
                 window.LOGGED_IN_USER = loggedUser.username;
                 setGlobalSession(window.LOGGED_IN_USER, loggedUser.email);
 
-                // Mở khóa biến mất sảnh Gateway, lọt thẳng vào phân khu con
+                // Mở khóa biến mất sảnh Gateway
                 document.getElementById("gateOverlay").style.display = "none";
                 showNotificationPopup("XÁC THỰC", `Chào mừng cư dân [${window.LOGGED_IN_USER}] đã đăng nhập mạng Independent City thành công!`);
-                document.getElementById('page-hub').src = 'hub.html';
+                
+                // THÔNG MẠCH VERCEL: Gọi chính xác URL tuyệt đối của file hub.html để trình duyệt nạp động [🗎1]
+                const baseUrl = window.location.origin;
+                document.getElementById('page-hub').src = `${baseUrl}/hub.html`;
             }
+
         };
 
         // TIỆN ÍCH BỔ SUNG: Nhấn phím Enter trên bàn phím tự động click nút đăng nhập / đăng ký nhanh
