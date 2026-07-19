@@ -146,8 +146,8 @@
     <!-- =========================================================
          1. THẺ SCRIPT THƯỜNG: ĐỂ NẠP TOÀN CỤC CHỐNG ĐƠ NÚT VÀ NGHẼN MẠCH
          ========================================================= -->
+        <!-- ĐÃ VÁ CHUẨN: Bọc kín thẻ script thường độc lập để nạp hàm toàn cục lập tức -->
     <script>
-        // Hàm xử lý ẩn hiện luân phiên 3 form sảnh vào
         window.toggleGateView = function(viewName) {
             const login = document.getElementById("loginFormBox");
             const register = document.getElementById("registerFormBox");
@@ -164,7 +164,6 @@
             if (viewName === 'OTP') otpBox.style.display = "block";
         };
 
-        // Hàm cổng trung gian hứng sự kiện Click từ các nút bấm HTML ngoài
         window.handleGatewayAuth = function(type) {
             if (typeof window.executeGatewayAuthCloud === 'function') {
                 window.executeGatewayAuthCloud(type);
@@ -173,20 +172,20 @@
             }
         };
 
-        // Hàm cổng trung gian hứng sự kiện Click xác minh OTP Admin Chess.com
         window.verifyAdminOTPCloud = function() {
             if (typeof window.executeVerifyAdminOTPCloud === 'function') {
                 window.executeVerifyAdminOTPCloud();
             }
         };
-    </script>
+    </script> <!-- Nhớ đảm bảo có thẻ đóng này trước khi bước sang thẻ script type="module" -->
 
-        // Hàm cổng trung gian hứng sự kiện Click xác minh OTP Admin Chess.com
+    <script>
         window.verifyAdminOTPCloud = function() {
             if (typeof window.executeVerifyAdminOTPCloud === 'function') {
                 window.executeVerifyAdminOTPCloud();
             }
         };
+        </script>
     </script>
 
     <!-- =========================================================
