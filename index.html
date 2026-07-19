@@ -163,6 +163,7 @@
 
         // Thuật toán chuyển đổi Tab động Single Page (SPA) độc lập dữ liệu giữa các phân khu [🗎1]
                 // THÔNG MẠCH VERCEL: Thuật toán chuyển đổi Tab động bốc đúng URL gốc của trang web [🗎1]
+               // THÔNG MẠCH VERCEL: Thuật toán chuyển đổi Tab động bốc đúng URL gốc của trang web [🗎1]
         window.switchHubTab = function(frameId) {
             if (!window.LOGGED_IN_USER) return; 
 
@@ -184,6 +185,23 @@
                 }
             }
         };
+
+        // Hàm tiện ích đăng xuất nhanh, dọn sạch sảnh và trả Iframe về trạng thái đóng băng
+        window.logoutSystem = function() {
+            window.LOGGED_IN_USER = "";
+            document.getElementById("gateOverlay").style.display = "flex";
+            document.getElementById("agreeCheckbox").checked = false;
+            
+            document.getElementById("loginUserOrEmail").value = "";
+            document.getElementById("loginPwd").value = "";
+            document.getElementById("regUser").value = "";
+            document.getElementById("regEmail").value = "";
+            document.getElementById("regPwd").value = "";
+            
+            window.toggleGateView(false);
+            document.querySelectorAll('.content-frame').forEach(frame => frame.src = "about:blank");
+        };
+
 
         // Hàm tiện ích đăng xuất nhanh, dọn sạch sảnh và trả Iframe về trạng thái đóng băng
         window.logoutSystem = function() {
@@ -255,7 +273,7 @@
                     alert("Hệ thống gặp trục trặc khi ghi nhận thông tin cư dân!");
                 }
 
-                        } else if (type === 'login') {
+                                    } else if (type === 'login') {
                 const userOrEmail = document.getElementById("loginUserOrEmail").value.trim();
                 const password = document.getElementById("loginPwd").value.trim();
 
@@ -289,23 +307,7 @@
                 const baseUrl = window.location.origin;
                 document.getElementById('page-hub').src = `${baseUrl}/hub.html`;
             }
-
         };
-
-        // TIỆN ÍCH BỔ SUNG: Nhấn phím Enter trên bàn phím tự động click nút đăng nhập / đăng ký nhanh
-        document.addEventListener("keydown", (event) => {
-            if (event.key === "Enter") {
-                const overlay = document.getElementById("gateOverlay");
-                if (overlay.style.display !== "none") {
-                    const loginBox = document.getElementById("loginFormBox");
-                    if (loginBox.style.display !== "none") {
-                        window.handleGatewayAuth('login');
-                    } else {
-                        window.handleGatewayAuth('register');
-                    }
-                }
-            }
-        });
     </script>
 </body>
 </html>
