@@ -157,7 +157,7 @@
          ========================================================= -->
     <script type="module">
         // Nhập trạm kết nối cơ sở dữ liệu và hàm báo popup từ file tiện ích dùng chung
-        import { clientDB, showNotificationPopup, setGlobalSession } from './utils.js';
+        import { getDB, showNotificationPopup, setGlobalSession } from './utils.js';
 
         window.LOGGED_IN_USER = "";
 
@@ -244,7 +244,7 @@
                 }
 
                 // Kiểm tra trùng lặp username trên bảng city_users đám mây
-                const { data: existUser } = await clientDB.from('city_users').select('username').eq('username', username);
+                const { data: existUser } = await getDB().from('city_users').select('username').eq('username', username);
                 if (existUser && existUser.length > 0) {
                     alert("Lỗi: Tên tài khoản này đã được sử dụng bởi cư dân khác!");
                     return;
@@ -252,7 +252,7 @@
 
                 try {
                     // 1. Chèn thẳng tài khoản mật khẩu tĩnh vào bảng city_users trên mây [🗎1]
-                    await clientDB.from('city_users').insert([{ 
+                    await getDB().from('city_users').insert([{ 
                         username: username, 
                         email: email, 
                         password: password,
@@ -260,7 +260,7 @@
                     }]);
 
                     // 2. Khởi tạo ví tiền cấp hạn mức vốn 1.000.000 AD trong city_bank [🗎1]
-                    await clientDB.from('city_bank').insert([{ 
+                    await getDB().from('city_bank').insert([{ 
                         username: username, 
                         balance: 1000000 
                     }]);
@@ -283,7 +283,7 @@
                 }
 
                 // TIẾN HÀNH KIỂM TRA ĐĂNG NHẬP MẬT KHẨU TĨNH LINH HOẠT [🗎1]
-                const { data: users, error } = await clientDB
+                const { data: users, error } = await getDB()
                     .from('city_users')
                     .select('*')
                     .eq('password', password)
