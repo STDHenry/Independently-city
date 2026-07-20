@@ -89,41 +89,42 @@
                 </div>
             </div>
                         <!-- Cột bên phải Form 1: Đăng nhập bằng Tên HOẶC Email cực kỳ linh hoạt -->
+                        <!-- Cột bên phải Form 1: Đăng nhập bằng Tên HOẶC Email cực kỳ linh hoạt -->
             <div class="gate-panel" id="loginFormBox">
                 <h2 style="margin-top:0; text-transform: uppercase; font-weight: 800; color: #001F3F;">Đăng Nhập Cư Dân</h2>
                 <div style="margin-bottom: 15px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản hoặc địa chỉ Email:</label>
+                    <!-- ĐÃ VÁ: Gài thêm thuộc tính for liên kết thẳng id của input -->
+                    <label for="loginUserOrEmail" style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản hoặc địa chỉ Email:</label>
                     <input type="text" id="loginUserOrEmail" class="city-input" placeholder="Nhập tên tài khoản hoặc email của bạn...">
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Mật khẩu bảo mật:</label>
+                    <!-- ĐÃ VÁ: Gài thêm thuộc tính for liên kết thẳng id của input -->
+                    <label for="loginPwd" style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Mật khẩu bảo mật:</label>
                     <input type="password" id="loginPwd" class="city-input" placeholder="Nhập mật khẩu...">
                 </div>
                 <button class="city-btn" onclick="handleGatewayAuth('login')">Đăng nhập vào Thành Phố 🏠</button>
                 <p style="font-size:12px; margin-top:20px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView(true)">Chưa có tài khoản? Bấm vào đây để đăng ký mới</p>
             </div>
-                        <!-- Cột bên phải Form 2: Điền thông tin Đăng ký tài khoản cư dân mới tinh -->
+
+            <!-- Cột bên phải Form 2: Điền thông tin Đăng ký tài khoản cư dân mới tinh -->
             <div class="gate-panel" id="registerFormBox" style="display: none;">
                 <h2 style="margin-top:0; text-transform: uppercase; font-weight: 800; color: #001F3F;">Khởi Tạo Danh Tính</h2>
                 <div style="margin-bottom: 12px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản muốn đặt (Username độc nhất):</label>
+                    <label for="regUser" style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Tên tài khoản muốn đặt (Username độc nhất):</label>
                     <input type="text" id="regUser" class="city-input" placeholder="Ví dụ: HocSinhA" autocomplete="off">
                 </div>
                 <div style="margin-bottom: 12px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Địa chỉ Email:</label>
+                    <label for="regEmail" style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Địa chỉ Email:</label>
                     <input type="email" id="regEmail" class="city-input" placeholder="nhap-email-cua-ban@gmail.com" autocomplete="off">
                 </div>
                 <div style="margin-bottom: 20px;">
-                    <label style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Thiết lập mật khẩu an toàn:</label>
+                    <label for="regPwd" style="font-weight: bold; display:block; margin-bottom:5px; font-size:13px;">Thiết lập mật khẩu an toàn:</label>
                     <input type="password" id="regPwd" class="city-input" placeholder="Nhập mật khẩu tự chọn...">
                 </div>
                 <button class="city-btn" onclick="handleGatewayAuth('register')" style="width: 100%;">Hoàn tất thủ tục Nhập Tịch ➔</button>
                 <p style="font-size:12px; margin-top:20px; cursor:pointer; text-decoration:underline;" onclick="window.toggleGateView(false)">Đã có tài khoản? Quay lại khung đăng nhập</p>
             </div>
-        </div> <!-- Thẻ đóng kín cực kỳ quan trọng của khối gate-overlay phủ sảnh sập cửa chặn hệ thống -->
-                <!-- =========================================================
-             THANH NAVBAR TỔNG MANG BIỂU TƯỢNG EMOJI THEO YÊU CẦU ĐỀ XUẤT CỦA BẠN
-             ========================================================= -->
+        </div> <!-- Kết thúc khối cổng chặn hệ thống giao diện -->
         <div class="city-navbar">
             <div id="navTab-hub" class="nav-item active" onclick="switchHubTab('tab-hub')">🏠 Hub Chủ</div>
             <div id="navTab-bank" class="nav-item" onclick="switchHubTab('tab-bank')">🏦 Ngân Hàng</div>
