@@ -725,7 +725,10 @@
 
             const title = document.getElementById("prodTitleInput").value.trim();
             const description = document.getElementById("prodDescInput").value.trim();
-            const imageUrl = document.getElementById("prodImageInput").value.trim() || "https://unsplash.com"; 
+                    // ĐÃ VÁ CORB: Thay link ảnh mạng ngoài bằng chuỗi SVG giả lập an toàn, chấp mọi loại tường lửa trình duyệt
+        const imageUrl = document.getElementById("prodImageInput").value.trim() || 
+            "data:image/svg+xml;utf8,<svg xmlns='http://w3.org' width='80' height='80' viewBox='0 0 80 80'><rect width='80' height='80' fill='%23001F3F'/><text x='50%' y='50%' dominant-baseline='middle' text-anchor='middle' fill='%23ffffff' font-family='Arial' font-size='12'>Independent</text></svg>";
+
             const price = parseInt(document.getElementById("prodPriceInput").value);
 
             if (title === "" || description === "" || isNaN(price)) {
