@@ -7,12 +7,14 @@ const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBh
 
 let cachedSupabaseClient = null;
 
-// Hàm Getter hoãn giờ nạp biến, đợi thư viện đám mây nạp xong mới bốc biến [🗎1]
+// Hàm Getter hoãn giờ tương thích 100% với cổng kết nối CDN mở
 export function getDB() {
     if (cachedSupabaseClient) return cachedSupabaseClient;
-    const supabaseEngine = window.supabase || window.parent.supabase;
+    
+    // ĐÃ VÁ CHUẨN: Bốc thẳng đối tượng supabase từ cửa sổ trình duyệt hiện tại [🗎2]
+    const supabaseEngine = window.supabase;
     if (!supabaseEngine) {
-        console.warn("⚠️ Trạm Gateway utils.js: Đang đợi thư viện đám mây nạp ngầm...");
+        console.warn("⚠️ Đang đợi thư viện đám mây nạp ngầm...");
         return null;
     }
     cachedSupabaseClient = supabaseEngine.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
